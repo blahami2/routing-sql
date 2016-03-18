@@ -1,13 +1,13 @@
-﻿--SELECT osm_id AS id--, ST_AsX3D(geom_vertex) AS geom 
---FROM prg_2po_vertex
---EXCEPT
+CREATE OR REPLACE VIEW valid_ways AS
+SELECT * FROM ways WHERE public."_isValidWay"(ways);
 
+CREATE OR REPLACE VIEW valid_nodes AS
 SELECT nodes.*--, ST_AsX3D(geom) AS geom, amount, ST_AsText(nodes.geom) 
 FROM nodes JOIN
         (SELECT res.node_id FROM
             (SELECT w.node_id, COUNT(*) AS amount FROM
                 (SELECT unnest(fw.nodes) AS node_id,* FROM 
-                    (SELECT * FROM ways WHERE (public."_isValidWay"(ways)) ) AS fw 
+                    valid_ways AS fw 
                 ) AS w 
             GROUP BY (w.node_id)) AS res
             WHERE (
@@ -17,14 +17,7 @@ FROM nodes JOIN
                 ) 
         UNION
         SELECT nodes.id AS node_id FROM
-	    nodes JOIN (
-		SELECT * FROM ways WHERE (public."_isValidWay"(ways))
-	    ) AS ways
+	    nodes JOIN valid_ways AS ways
 	    ON (nodes.id = ways.nodes[array_lower(nodes,1)] OR nodes.id = ways.nodes[array_upper(nodes,1)])
         ) AS valid
-ON nodes.id = valid.node_id
---ORDER BY nodes.id
-
-
-
-;
+ON nodes.id = valid.node_id;
