@@ -1,6 +1,4 @@
--- Extract valid nodes
-
---SELECT osm_id AS id--, ST_AsX3D(geom_vertex) AS geom 
+﻿--SELECT osm_id AS id--, ST_AsX3D(geom_vertex) AS geom 
 --FROM prg_2po_vertex
 --EXCEPT
 
