@@ -30,7 +30,8 @@ CREATE TABLE public.speed_map
 (
   road_type integer NOT NULL,
   state character(2) NOT NULL,
-  speed integer,
+  speed_inside integer,
+  speed_outside integer,
   CONSTRAINT speed_map_pkey PRIMARY KEY (road_type, state)
 )
 WITH (
