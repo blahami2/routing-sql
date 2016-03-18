@@ -18,6 +18,10 @@ SELECT * FROM a
 EXCEPT
 SELECT * FROM b;
 
+-- CROSS-DATABASE INSERT
+INSERT INTO target_db.target_table (target_column*)
+SELECT (source_columnt*) FROM source_db.source_table;
+
 -- PERFORMANCE
 -- extract.sql execution - 4s, COUNT 2s
 -- creating ways view - 0.067s
