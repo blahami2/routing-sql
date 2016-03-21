@@ -1,4 +1,4 @@
-﻿/*
+/*
 SELECT ST_AsText((dump::geometry_dump).geom), (dump::geometry_dump).path[1]  FROM (
 SELECT 
 --	id,
@@ -26,7 +26,7 @@ WHERE (
 ORDER BY (dump::geometry_dump).path[1]
 */
 
-
+ /*
 SELECT ST_AsText(
 			ST_Split(
 				linestring, 
@@ -42,6 +42,7 @@ SELECT ST_AsText(
 		)
 FROM ways
 WHERE id = 1614262;
+*/
 
 --UNION
 --SELECT ST_AsText(linestring) AS geom
@@ -58,3 +59,13 @@ WHERE id = 1614262;
 --	id = 106502246
 --) 
 ;
+
+/* select edges with nodes (osmid)
+SELECT e.osm_id, ST_AsText(e.geom), sn.osm_id AS source, tn.osm_id AS target, e.length 
+FROM edges_routing AS e 
+JOIN nodes_routing AS sn
+ON e.source_id = sn.id
+JOIN nodes_routing AS tn
+ON e.target_id = tn.id
+WHERE e.osm_id = 1614262;
+*/
