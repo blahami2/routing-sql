@@ -21,10 +21,12 @@ $BODY$DECLARE
 	oneway boolean := false;
 	counter integer := 0;
 	idx integer := 0;
+	idx_counter integer := 0;
 	node_set geometry;
 	dump geometry;
 	node_split geometry[];
-	edge_geom geometry;
+	edge_geom geometry := null;
+	node_array geometry[];
 --	edge_list edge_type; 
 BEGIN
 -- **************************************************************************************** EXTRACT SPEED ****************************************************************************************
@@ -76,22 +78,52 @@ IF public."_isValidWay"(way) THEN
 	paid := exist(way.tags, 'toll') AND (way.tags->'toll' = 'yes');
 -- **************************************************************************************** EXTRACT ONEWAY ****************************************************************************************	
 	oneway := (exist(way.tags, 'oneway') AND (way.tags->'oneway' = 'yes')) OR (way.tags->'highway' = 'motorway');
--- **************************************************************************************** EXTRACT ROAD TYPE ****************************************************************************************	
+-- **************************************************************************************** EXTRACT ROAD TYPE ****************************************************************************************
+	FOR dump IN (SELECT (dumb::geometry_dump).geom FROM (
+					SELECT (ST_DumpPoints(way.linestring)) AS dumb
+				) AS dumbb) LOOP
+		node_array := array_append(node_array, dump);
+	END LOOP;
 -- **************************************************************************************** FOREACH NODE IN WAY - PREPARE NODES ****************************************************************************************
+	counter := 0;
 	FOREACH node_id IN ARRAY way.nodes LOOP
 		SELECT * INTO node_rec FROM nodes_routing WHERE nodes_routing.osm_id = node_id;
+--		RAISE NOTICE 'noderec = %',node_rec;
+		counter := counter + 1;
+		IF edge_geom IS NULL THEN
+			edge_geom := ST_MakeLine(node_array[counter]);
+		ELSE
+			edge_geom := ST_AddPoint(edge_geom, node_array[counter]);
+		END IF;
 		IF node_rec IS NULL THEN
 		ELSE
-			counter := counter + 1;
---			RAISE NOTICE 'counter = %', counter;
-			IF node_set IS NULL THEN
---				RAISE NOTICE 'node set is null, noderec: %', node_rec;
-				node_set := node_rec.geom;
+			target_rec := node_rec;
+			IF source_rec IS NULL THEN
 			ELSE
-				node_set := ST_Union(node_set, node_rec.geom);
+				edge_geom = ST_SetSRID(edge_geom, 4326);
+				INSERT INTO edges_routing 
+					(osm_id, is_paid, is_oneway, is_inside, speed_forward, speed_backward, length, road_type, state, geom, source_id, target_id)
+					VALUES
+					(way.id::bigint							-- osm_id
+					, paid									-- is_paid
+					, oneway								-- is_oneway
+					, false									-- is_inside
+					, speed_fw								-- speed_forward
+					, speed_bw								-- speed_backward
+					, (ST_Length(edge_geom, true) / 1000)	-- length
+					, 1::integer							-- road_type
+					, 'CZ'::character(2)					-- state
+					, edge_geom								-- geom
+					, source_rec.id							-- source_id
+					, target_rec.id							-- target_id
+					);
+				edge_geom := ST_MakeLine(node_array[counter]);
+--				counter := counter - 1;
 			END IF;
+			source_rec := node_rec;
 		END IF;
 	END LOOP;
+	/*
 -- **************************************************************************************** SPLIT NODES ****************************************************************************************
 --	RAISE NOTICE 'node set = %', node_set;
 
@@ -114,9 +146,12 @@ IF public."_isValidWay"(way) THEN
 	) LOOP
 		node_split := array_append(node_split, dump);
 	END LOOP;
+	
 --	RAISE NOTICE 'node split = %', node_split;
 	
 -- **************************************************************************************** FOREACH NODE IN WAY ****************************************************************************************
+	source_rec = null;
+	target_rec = null;
 	FOREACH node_id IN ARRAY way.nodes LOOP
 		SELECT * INTO node_rec FROM nodes_routing WHERE nodes_routing.osm_id = node_id;
 		IF node_rec IS NULL THEN
@@ -126,33 +161,28 @@ IF public."_isValidWay"(way) THEN
 			IF source_rec IS NULL THEN
 			ELSE
 				idx := idx + 1;
-				edge_geom = node_split[idx];
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! PROBABLY OPTIMIZABLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-				/*SELECT dump.geom INTO edge_geom FROM
-				 (SELECT (ST_Dump(
+
+				IF idx = 1 THEN
+					idx_counter = 2;
+				ELSE
+					idx_counter = 1;
+				END IF;
+				SELECT (dumb::geometry_dump).geom FROM (
+				SELECT (ST_Dump(
 					ST_Split(
 						way.linestring, 
 						ST_Snap(
-							node_set
+							ST_Union(
+								source_rec.geom,target_rec.geom
+								--(SELECT geom FROM nodes_routing) 
+							)
 							,way.linestring
 							,0.00000001
 						)
 					)
-				)).geom,
-				(ST_Dump(
-					ST_Split(
-						way.linestring, 
-						ST_Snap(
-							node_set
-							,way.linestring
-							,0.00000001
-						)
-					)
-				)).path[1]
-				) AS dump
-				 WHERE path = idx;*/
--- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! PROBABLY OPTIMIZABLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
---				RAISE NOTICE 'source = %',source_rec.id;
+				)) AS dumb )AS dumbie
+				INTO edge_geom
+				WHERE (dumb::geometry_dump).path[1] = idx_counter;
 -- **************************************************************************************** INSERT ****************************************************************************************
 				INSERT INTO edges_routing 
 					(osm_id, is_paid, is_oneway, is_inside, speed_forward, speed_backward, length, road_type, state, geom, source_id, target_id)
@@ -177,7 +207,7 @@ IF public."_isValidWay"(way) THEN
 		END IF;
 		--IF EXISTS(SELECT * FROM nodes_routing AS nodes WHERE nodes.osm_id = node_id) THEN
 		--END IF;
-	END LOOP;
+	END LOOP;*/
 --	RETURN edge_list;
 END IF;
 	RETURN;

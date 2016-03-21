@@ -1,4 +1,5 @@
-﻿SELECT (dump::geometry_dump).geom, (dump::geometry_dump).path[1]  FROM (
+﻿/*
+SELECT ST_AsText((dump::geometry_dump).geom), (dump::geometry_dump).path[1]  FROM (
 SELECT 
 --	id,
 --	ST_AsText(
@@ -7,7 +8,7 @@ SELECT
 				linestring, 
 				ST_Snap(
 					ST_Union(
-						ST_SetSRID(ST_MakePoint(14.4412761, 50.1095044),4326),ST_SetSRID(ST_MakePoint(14.4388453, 50.1092406),4326)
+						ST_SetSRID(ST_MakePoint(14.5763739, 50.0910499),4326),ST_SetSRID(ST_MakePoint(14.576333, 50.0910358),4326)
 						--(SELECT geom FROM nodes_routing) 
 					)
 					,linestring
@@ -16,13 +17,31 @@ SELECT
 			)
 		)) AS dump
 --	) AS geom 
---"LINESTRING(14.4418276 50.1096055,14.4412761 50.1095044,14.4408275 50.1094096,14.4404817 50.1093514,14.4400379 50.109298,14.4393789 50.1092637,14.4392107 50.1092536,14.4388453 50.1092406)"
+--""LINESTRING(14.5763739 50.0910499,14.576333 50.0910358,14.5761384 50.0909768,14.5763839 50.0905841,14.5765713 50.0900869,14.5767254 50.0898754,14.5770473 50.0894581)"
 FROM ways 
 WHERE (
-	id = 106502246
+	id = 1614262
 ) 
 ) AS dumb
 ORDER BY (dump::geometry_dump).path[1]
+*/
+
+
+SELECT ST_AsText(
+			ST_Split(
+				linestring, 
+				ST_Snap(
+					ST_Union(
+						ST_SetSRID(ST_MakePoint(14.5763739, 50.0910499),4326),ST_SetSRID(ST_MakePoint(14.576333, 50.0910358),4326)
+						--(SELECT geom FROM nodes_routing) 
+					)
+					,linestring
+					,0.00000001
+				)
+			)
+		)
+FROM ways
+WHERE id = 1614262;
 
 --UNION
 --SELECT ST_AsText(linestring) AS geom
