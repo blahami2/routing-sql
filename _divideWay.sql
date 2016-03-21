@@ -1,38 +1,186 @@
--- Function: public."_divideWay"(ways)
+﻿-- Function: public."_divideWay"(ways)
 
 DROP FUNCTION public."_divideWay"(ways);
 
-CREATE OR REPLACE FUNCTION public."_divideWay"(IN ways ways)
-  RETURNS TABLE(osm_id bigint, is_paid boolean, is_oneway boolean, is_inside boolean, speed_forward integer, speed_backward integer, length double precision, road_type integer, state character, geom geometry, source_id bigint, target_id bigint) AS
+-- **************************************************************************************** DELETING CURRENT ROWS ****************************************************************************************
+DELETE FROM edges_routing;
+
+CREATE OR REPLACE FUNCTION public."_divideWay" (IN way ways)
+RETURNS TABLE (osm_id bigint, is_paid boolean, is_oneway boolean, is_inside boolean, speed_forward integer, speed_backward integer, length double precision, road_type integer, state character, geom geometry, source_id bigint, target_id bigint)
+AS
+
 $BODY$DECLARE
 --	CREATE TYPE edge_type AS TABLE of edges_routing%rowtype;
 	node_id bigint;
-	counter integer;
 	source_rec nodes_routing%rowtype;
 	target_rec nodes_routing%rowtype;
 	node_rec nodes_routing%rowtype;
+	speed_fw integer := -1;
+	speed_bw integer := -1;
+	paid boolean := false;
+	oneway boolean := false;
+	counter integer := 0;
+	idx integer := 0;
+	node_set geometry;
+	dump geometry;
+	node_split geometry[];
+	edge_geom geometry;
 --	edge_list edge_type; 
 BEGIN
-	counter := 1;
-	FOREACH node_id IN ARRAY ways.nodes LOOP
+-- **************************************************************************************** EXTRACT SPEED ****************************************************************************************
+IF public."_isValidWay"(way) THEN
+--	RAISE NOTICE 'valid way = %', way;
+	IF exist(way.tags, 'maxspeed') THEN -- maxspeed tag
+		IF way.tags->'maxspeed' SIMILAR TO '(km/h|kmh|kph)' THEN
+			speed_fw := to_number(substring(way.tags->'maxspeed' from '#"%#" (km/h|kmh|kph)' for '#'), '999999999');
+		ELSE 
+			IF way.tags->'maxspeed' SIMILAR TO 'mph' THEN
+				speed_fw := to_number(substring(way.tags->'maxspeed' from '#"%#" mph' for '#'), '999999999') * 1.609;
+			ELSE
+				IF way.tags->'maxspeed' SIMILAR TO 'knots' THEN
+					speed_fw := to_number(substring(way.tags->'maxspeed' from '#"%#" knots' for '#'), '999999999') * 1.852;
+				END IF;
+			END IF;
+		END IF;
+		--speed_fw := ways.tags->'maxspeed';
+		speed_bw := speed_fw;
+	ELSE -- maxspeed:forward
+		IF exist(way.tags, 'maxspeed:forward') THEN
+			IF way.tags->'maxspeed:forward' SIMILAR TO '(km/h|kmh|kph)' THEN
+				speed_fw := to_number(substring(way.tags->'maxspeed:forward' from '#"%#" (km/h|kmh|kph)' for '#'), '999999999');
+			ELSE 
+				IF way.tags->'maxspeed:forward' SIMILAR TO 'mph' THEN
+					speed_fw := to_number(substring(way.tags->'maxspeed:forward' from '#"%#" mph' for '#'), '999999999') * 1.609;
+				ELSE
+					IF way.tags->'maxspeed:forward' SIMILAR TO 'knots' THEN
+						speed_fw := to_number(substring(way.tags->'maxspeed:forward' from '#"%#" knots' for '#'), '999999999') * 1.852;
+					END IF;
+				END IF;
+			END IF;
+		END IF;
+	END IF;
+	IF exist(way.tags, 'maxspeed:backward') THEN -- maxspeed:backward
+		IF way.tags->'maxspeed:backward' SIMILAR TO '(km/h|kmh|kph)' THEN
+			speed_bw := to_number(substring(way.tags->'maxspeed:backward' from '#"%#" (km/h|kmh|kph)' for '#'), '999999999');
+		ELSE 
+			IF way.tags->'maxspeed:backward' SIMILAR TO 'mph' THEN
+				speed_bw := to_number(substring(way.tags->'maxspeed:backward' from '#"%#" mph' for '#'), '999999999') * 1.609;
+			ELSE
+				IF way.tags->'maxspeed:backward' SIMILAR TO 'knots' THEN
+					speed_bw := to_number(substring(way.tags->'maxspeed:backward' from '#"%#" knots' for '#'), '999999999') * 1.852;
+				END IF;
+			END IF;
+		END IF;
+	END IF;
+-- **************************************************************************************** EXTRACT PAID ****************************************************************************************
+	paid := exist(way.tags, 'toll') AND (way.tags->'toll' = 'yes');
+-- **************************************************************************************** EXTRACT ONEWAY ****************************************************************************************	
+	oneway := (exist(way.tags, 'oneway') AND (way.tags->'oneway' = 'yes')) OR (way.tags->'highway' = 'motorway');
+-- **************************************************************************************** EXTRACT ROAD TYPE ****************************************************************************************	
+-- **************************************************************************************** FOREACH NODE IN WAY - PREPARE NODES ****************************************************************************************
+	FOREACH node_id IN ARRAY way.nodes LOOP
+		SELECT * INTO node_rec FROM nodes_routing WHERE nodes_routing.osm_id = node_id;
+		IF node_rec IS NULL THEN
+		ELSE
+			counter := counter + 1;
+--			RAISE NOTICE 'counter = %', counter;
+			IF node_set IS NULL THEN
+--				RAISE NOTICE 'node set is null, noderec: %', node_rec;
+				node_set := node_rec.geom;
+			ELSE
+				node_set := ST_Union(node_set, node_rec.geom);
+			END IF;
+		END IF;
+	END LOOP;
+-- **************************************************************************************** SPLIT NODES ****************************************************************************************
+--	RAISE NOTICE 'node set = %', node_set;
+
+
+
+	
+	FOR dump IN (
+		SELECT (dumb::geometry_dump).geom FROM (
+		SELECT (ST_Dump(
+			ST_Split(
+				way.linestring, 
+				ST_Snap(
+					node_set
+					,way.linestring
+					,0.00000001
+				)
+			)
+		)) AS dumb )AS dumbie
+		ORDER BY (dumb::geometry_dump).path[1]
+	) LOOP
+		node_split := array_append(node_split, dump);
+	END LOOP;
+--	RAISE NOTICE 'node split = %', node_split;
+	
+-- **************************************************************************************** FOREACH NODE IN WAY ****************************************************************************************
+	FOREACH node_id IN ARRAY way.nodes LOOP
 		SELECT * INTO node_rec FROM nodes_routing WHERE nodes_routing.osm_id = node_id;
 		IF node_rec IS NULL THEN
 		ELSE
 			target_rec := node_rec;
-			RAISE NOTICE 'osm id = %, id = %', node_rec.osm_id,node_rec.id;
+--			RAISE NOTICE 'osm id = %, id = %', node_rec.osm_id,node_rec.id;
 			IF source_rec IS NULL THEN
 			ELSE
-				RAISE NOTICE 'source = %',source_rec.id;
-				RETURN QUERY SELECT	ways.id::bigint,false, false, false, 1,1,1.0::double precision,1::integer,'CZ'::character(2),ST_SetSRID(ST_MakePoint(1,1),4326),source_rec.id, target_rec.id;
-				counter := counter + 1;
+				idx := idx + 1;
+				edge_geom = node_split[idx];
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! PROBABLY OPTIMIZABLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				/*SELECT dump.geom INTO edge_geom FROM
+				 (SELECT (ST_Dump(
+					ST_Split(
+						way.linestring, 
+						ST_Snap(
+							node_set
+							,way.linestring
+							,0.00000001
+						)
+					)
+				)).geom,
+				(ST_Dump(
+					ST_Split(
+						way.linestring, 
+						ST_Snap(
+							node_set
+							,way.linestring
+							,0.00000001
+						)
+					)
+				)).path[1]
+				) AS dump
+				 WHERE path = idx;*/
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! PROBABLY OPTIMIZABLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+--				RAISE NOTICE 'source = %',source_rec.id;
+-- **************************************************************************************** INSERT ****************************************************************************************
+				INSERT INTO edges_routing 
+					(osm_id, is_paid, is_oneway, is_inside, speed_forward, speed_backward, length, road_type, state, geom, source_id, target_id)
+					VALUES
+					(way.id::bigint							-- osm_id
+					, paid									-- is_paid
+					, oneway								-- is_oneway
+					, false									-- is_inside
+					, speed_fw								-- speed_forward
+					, speed_bw								-- speed_backward
+					, ST_Length(edge_geom)					-- length
+					, 1::integer							-- road_type
+					, 'CZ'::character(2)					-- state
+					, edge_geom								-- geom
+					, source_rec.id							-- source_id
+					, target_rec.id							-- target_id
+					);
+					
+				RETURN QUERY SELECT way.id::bigint,false, false, false, 1,1,1.0::double precision,1::integer,'CZ'::character(2),ST_SetSRID(ST_MakePoint(1,1),4326),source_rec.id, target_rec.id;
 			END IF;
 			source_rec := node_rec;
 		END IF;
 		--IF EXISTS(SELECT * FROM nodes_routing AS nodes WHERE nodes.osm_id = node_id) THEN
 		--END IF;
 	END LOOP;
-	RETURN;
 --	RETURN edge_list;
+END IF;
+	RETURN;
 END;
 --RAISE NOTICE 'i want to print % and %', var1,var2;$BODY$
   LANGUAGE plpgsql VOLATILE
