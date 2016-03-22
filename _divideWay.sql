@@ -102,7 +102,7 @@ IF public."_isValidWay"(way) THEN
 			ELSE
 				edge_geom = ST_SetSRID(edge_geom, 4326);
 				INSERT INTO edges_routing 
-					(osm_id, is_paid, is_oneway, is_inside, speed_forward, speed_backward, length, road_type, state, geom, source_id, target_id)
+					(osm_id, is_paid, is_oneway, is_inside, speed_forward, speed_backward, length, road_type, state, geom, source_id, target_id, source_lon, source_lat, target_lon, target_lat)
 					VALUES
 					(way.id::bigint							-- osm_id
 					, paid									-- is_paid
@@ -116,6 +116,10 @@ IF public."_isValidWay"(way) THEN
 					, edge_geom								-- geom
 					, source_rec.id							-- source_id
 					, target_rec.id							-- target_id
+					, ST_X(source_rec.geom) * 10000000		-- source_longitude
+					, ST_Y(source_rec.geom) * 10000000		-- source_latitude
+					, ST_X(target_rec.geom) * 10000000		-- target_longitude
+					, ST_Y(target_rec.geom) * 10000000		-- target_latitude
 					);
 				edge_geom := ST_MakeLine(node_array[counter]);
 --				counter := counter - 1;
@@ -218,3 +222,5 @@ END;
   ROWS 1000;
 ALTER FUNCTION public."_divideWay"(ways)
   OWNER TO postgres;
+
+SELECT public."_divideWay"(ways) FROM ways;
