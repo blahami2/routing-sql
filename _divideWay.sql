@@ -1,13 +1,12 @@
-﻿-- Function: public."_divideWay"(ways)
+-- Function: public."_divideWay"(ways)
 
-DROP FUNCTION public."_divideWay"(ways);
+DROP FUNCTION IF EXISTS public."a444ed2878a47bc022e78c55ae5d47a7"(ways);
 
 -- **************************************************************************************** DELETING CURRENT ROWS ****************************************************************************************
 DELETE FROM edges_routing;
 
-CREATE OR REPLACE FUNCTION public."_divideWay" (IN way ways)
-RETURNS TABLE (osm_id bigint, is_paid boolean, is_oneway boolean, is_inside boolean, speed_forward integer, speed_backward integer, length double precision, road_type integer, state character, geom geometry, source_id bigint, target_id bigint)
-AS
+CREATE OR REPLACE FUNCTION public."a444ed2878a47bc022e78c55ae5d47a7" (IN way ways)
+RETURNS void AS
 
 $BODY$DECLARE
 --	CREATE TYPE edge_type AS TABLE of edges_routing%rowtype;
@@ -214,13 +213,14 @@ IF public."_isValidWay"(way) THEN
 	END LOOP;*/
 --	RETURN edge_list;
 END IF;
-	RETURN;
 END;
 --RAISE NOTICE 'i want to print % and %', var1,var2;$BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100
   ROWS 1000;
-ALTER FUNCTION public."_divideWay"(ways)
+ALTER FUNCTION public."a444ed2878a47bc022e78c55ae5d47a7"(ways)
   OWNER TO postgres;
 
-SELECT public."_divideWay"(ways) FROM ways;
+SELECT public."a444ed2878a47bc022e78c55ae5d47a7"(ways) FROM ways;
+
+DROP FUNCTION public."a444ed2878a47bc022e78c55ae5d47a7"(ways);

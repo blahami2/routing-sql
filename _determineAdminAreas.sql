@@ -1,11 +1,11 @@
 ﻿-- Function: public."_determineAdminAreas"()
 
-DROP FUNCTION public."_determineAdminAreas"();
+DROP FUNCTION IF EXISTS public."5293eb9d34b3de48539ef881b7d2e174"();
+DROP TYPE IF EXISTS rel_way;
 
-DROP TYPE rel_way;
 CREATE TYPE rel_way AS (linestring geometry, sequence_id integer);
 
-CREATE OR REPLACE FUNCTION public."_determineAdminAreas"()
+CREATE OR REPLACE FUNCTION public."5293eb9d34b3de48539ef881b7d2e174"()
   RETURNS void AS
 $BODY$
 DECLARE
@@ -102,8 +102,11 @@ END;
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION public."_determineAdminAreas"()
+ALTER FUNCTION public."5293eb9d34b3de48539ef881b7d2e174"()
   OWNER TO postgres;
 
 
-SELECT public."_determineAdminAreas"();
+SELECT public."5293eb9d34b3de48539ef881b7d2e174"();
+
+DROP TYPE rel_way;
+DROP FUNCTION public."5293eb9d34b3de48539ef881b7d2e174"();
