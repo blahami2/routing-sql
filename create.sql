@@ -1,3 +1,31 @@
+-- ***************************** EDGE SEQUENCE *****************************
+-- Sequence: public.edges_routing_inc
+-- DROP SEQUENCE public.edges_routing_inc;
+
+CREATE SEQUENCE public.edges_routing_inc
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1
+  CACHE 1;
+ALTER TABLE public.edges_routing_inc
+  OWNER TO postgres;
+                                
+-- ***************************** NODE SEQUENCE *****************************
+-- Sequence: public.nodes_routing_inc
+-- DROP SEQUENCE public.nodes_routing_inc;
+
+CREATE SEQUENCE public.nodes_routing_inc
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1
+  CACHE 1;
+ALTER TABLE public.nodes_routing_inc
+  OWNER TO postgres;
+
+
+
 -- ***************************** ROAD TYPES *****************************
 -- Table: public.road_types
 -- DROP TABLE public.road_types;
@@ -56,11 +84,11 @@ CREATE INDEX speed_map_road_type_state_idx
 
 CREATE TABLE public.nodes_routing
 (
-  id bigint NOT NULL,
+  id bigint NOT NULL DEFAULT nextval('nodes_routing_inc'::regclass),
   osm_id bigint,
-  geom geometry,
   is_inside boolean,
   state character(2),
+  geom geometry(Point,4326),
   CONSTRAINT nodes_routing_pkey PRIMARY KEY (id)
 )
 WITH (
@@ -87,6 +115,7 @@ CREATE INDEX nodes_routing_osm_id_idx
   USING btree
   (osm_id);
 
+
 -- ***************************** EDGES *****************************
 -- Table: public.edges_routing
 -- DROP TABLE public.edges_routing;
@@ -106,6 +135,10 @@ CREATE TABLE public.edges_routing
   geom geometry(Geometry,4326),
   source_id bigint,
   target_id bigint,
+  source_lat integer,
+  source_lon integer,
+  target_lat integer,
+  target_lon integer,
   CONSTRAINT edges_routing_pkey PRIMARY KEY (id),
   CONSTRAINT nodes_source_idx FOREIGN KEY (source_id)
       REFERENCES public.nodes_routing (id) MATCH SIMPLE
@@ -137,6 +170,42 @@ CREATE INDEX edges_routing_osm_id_idx
   ON public.edges_routing
   USING btree
   (osm_id);
+
+-- Index: public.edges_routing_source_lat_idx
+
+-- DROP INDEX public.edges_routing_source_lat_idx;
+
+CREATE INDEX edges_routing_source_lat_idx
+  ON public.edges_routing
+  USING btree
+  (source_lat);
+
+-- Index: public.edges_routing_source_lon_idx
+
+-- DROP INDEX public.edges_routing_source_lon_idx;
+
+CREATE INDEX edges_routing_source_lon_idx
+  ON public.edges_routing
+  USING btree
+  (source_lon);
+
+-- Index: public.edges_routing_target_lat_idx
+
+-- DROP INDEX public.edges_routing_target_lat_idx;
+
+CREATE INDEX edges_routing_target_lat_idx
+  ON public.edges_routing
+  USING btree
+  (target_lat);
+
+-- Index: public.edges_routing_target_lon_idx
+
+-- DROP INDEX public.edges_routing_target_lon_idx;
+
+CREATE INDEX edges_routing_target_lon_idx
+  ON public.edges_routing
+  USING btree
+  (target_lon);
 
 -- Index: public.fki_nodes_source_idx
 

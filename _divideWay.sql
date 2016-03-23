@@ -1,4 +1,4 @@
--- Function: public."_divideWay"(ways)
+﻿-- Function: public."_divideWay"(ways)
 
 DROP FUNCTION IF EXISTS public."a444ed2878a47bc022e78c55ae5d47a7"(ways);
 
@@ -26,6 +26,7 @@ $BODY$DECLARE
 	node_split geometry[];
 	edge_geom geometry := null;
 	node_array geometry[];
+  road_type integer := 1;
 --	edge_list edge_type; 
 BEGIN
 -- **************************************************************************************** EXTRACT SPEED ****************************************************************************************
@@ -78,12 +79,16 @@ IF public."_isValidWay"(way) THEN
 -- **************************************************************************************** EXTRACT ONEWAY ****************************************************************************************	
 	oneway := (exist(way.tags, 'oneway') AND (way.tags->'oneway' = 'yes')) OR (way.tags->'highway' = 'motorway');
 -- **************************************************************************************** EXTRACT ROAD TYPE ****************************************************************************************
+  SELECT type_id INTO road_type FROM road_types WHERE way.tags->'highway' LIKE (CONCAT(road_types.name,'%'));
+  IF road_type IS NULL THEN
+	SELECT type_id INTO road_type FROM road_types WHERE road_types.name = 'living_street';
+  END IF;
+-- **************************************************************************************** FOREACH NODE IN WAY - PREPARE NODES **************************************************************************************** 
 	FOR dump IN (SELECT (dumb::geometry_dump).geom FROM (
 					SELECT (ST_DumpPoints(way.linestring)) AS dumb
 				) AS dumbb) LOOP
 		node_array := array_append(node_array, dump);
 	END LOOP;
--- **************************************************************************************** FOREACH NODE IN WAY - PREPARE NODES ****************************************************************************************
 	counter := 0;
 	FOREACH node_id IN ARRAY way.nodes LOOP
 		SELECT * INTO node_rec FROM nodes_routing WHERE nodes_routing.osm_id = node_id;
@@ -110,7 +115,7 @@ IF public."_isValidWay"(way) THEN
 					, speed_fw								-- speed_forward
 					, speed_bw								-- speed_backward
 					, (ST_Length(edge_geom, true) / 1000)	-- length
-					, 1::integer							-- road_type
+					, road_type							-- road_type
 					, 'CZ'::character(2)					-- state
 					, edge_geom								-- geom
 					, source_rec.id							-- source_id
@@ -216,8 +221,7 @@ END IF;
 END;
 --RAISE NOTICE 'i want to print % and %', var1,var2;$BODY$
   LANGUAGE plpgsql VOLATILE
-  COST 100
-  ROWS 1000;
+  COST 100;
 ALTER FUNCTION public."a444ed2878a47bc022e78c55ae5d47a7"(ways)
   OWNER TO postgres;
 
