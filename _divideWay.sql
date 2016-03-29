@@ -1,5 +1,4 @@
-﻿-- Function: public."_divideWay"(ways)
-
+-- Function: public."_divideWay"(ways)
 DROP FUNCTION IF EXISTS public."a444ed2878a47bc022e78c55ae5d47a7"(ways);
 
 -- **************************************************************************************** DELETING CURRENT ROWS ****************************************************************************************

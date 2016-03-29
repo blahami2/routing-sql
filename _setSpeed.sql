@@ -1,4 +1,4 @@
-﻿--SELECT *, tags->'ISO3166-1:alpha2' FROM relations WHERE (tags->'boundary' = 'administrative' AND to_number(tags->'admin_level','99') = 2 AND tags->'ISO3166-1:alpha2' IS NOT NULL)
+--SELECT *, tags->'ISO3166-1:alpha2' FROM relations WHERE (tags->'boundary' = 'administrative' AND to_number(tags->'admin_level','99') = 2 AND tags->'ISO3166-1:alpha2' IS NOT NULL)
 -- Function: public."_setState"()
 
 DROP FUNCTION IF EXISTS public."fba3dd4c94104260aeee0e3738676077"();
@@ -13,21 +13,21 @@ BEGIN
 
 FOR edge IN (SELECT * FROM edges_routing WHERE speed_forward = -1 OR speed_backward = -1) LOOP
 	SELECT * INTO speed FROM speed_map WHERE (speed_map.state = edge.state AND speed_map.type_id = edge.road_type);
-	IF edge.is_inside THEN BEGIN
-		IF edge.speed_forward = -1 THEN BEGIN
+	IF edge.is_inside THEN
+		IF edge.speed_forward = -1 THEN 
 			UPDATE edges_routing SET speed_forward = speed.speed_inside WHERE id = edge.id;
-		END;
-		IF edge.speed_backward = -1 THEN BEGIN
+		END IF;
+		IF edge.speed_backward = -1 THEN
 			UPDATE edges_routing SET speed_backward = speed.speed_inside WHERE id = edge.id;
-		END;
+		END IF;
 	ELSE
-		IF edge.speed_forward = -1 THEN BEGIN
+		IF edge.speed_forward = -1 THEN
 			UPDATE edges_routing SET speed_forward = speed.speed_outside WHERE id = edge.id;
-		END;
-		IF edge.speed_backward = -1 THEN BEGIN
+		END IF;
+		IF edge.speed_backward = -1 THEN
 			UPDATE edges_routing SET speed_backward = speed.speed_outside WHERE id = edge.id;
-		END;
-	END;
+		END IF;
+	END IF;
 	/* -- TODO traffic zones
 	UPDATE edges_routing
 	SET 
