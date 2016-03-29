@@ -18,6 +18,9 @@ SELECT * FROM a
 EXCEPT
 SELECT * FROM b;
 
+-- CONCAT
+CONCAT('str1','str2');
+
 -- CROSS-DATABASE INSERT
 INSERT INTO target_db.target_table (target_column*)
 SELECT (source_columnt*) FROM source_db.source_table;
