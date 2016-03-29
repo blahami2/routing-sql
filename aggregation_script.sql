@@ -5,4 +5,6 @@
 -- create_views.sql
 -- insert
 -- _divideWay.sql
--- _determineAdminAreas.sql
+-- _setInside.sql
+-- _setState.sql
+-- _determineSpeed.sql
