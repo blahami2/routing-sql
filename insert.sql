@@ -1,16 +1,34 @@
 -- INSERT ROAD TYPES
 INSERT INTO road_types (type_id, name)
 VALUES 
-  (1, 'motorway'),
-  (2, 'primary'),
-  (3, 'secondary'),
-  (4, 'tertiary'),
-  (5, 'trunk'),
+  (1, 'motorway'), 
+  (2, 'trunk'),
+  (3, 'primary'),
+  (4, 'secondary'),
+  (5, 'tertiary'),
   (6, 'unclassified'),
   (7, 'residential'),
   (8, 'living_street');
 
 -- INSERT VALUES INTO SPEED MAP
+INSERT INTO speed_map (type_id, state, speed_inside, speed_outside)
+VALUES
+  (1,'CZ',80,130),
+  (2,'CZ',50,90),
+  (3,'CZ',50,90),
+  (4,'CZ',50,90),
+  (5,'CZ',50,90),
+  (6,'CZ',50,90),
+  (7,'CZ',50,90),
+  (8,'CZ',20,20),
+  (1,'DE',80,150),
+  (2,'DE',50,130),
+  (3,'DE',50,100),
+  (4,'DE',50,100),
+  (5,'DE',50,100),
+  (6,'DE',50,100),
+  (7,'DE',50,100),
+  (8,'DE',7,7);
   
 -- INSERT TRAFFIC ZONES
 INSERT INTO traffic_zones (zone_id, name)
