@@ -1,11 +1,11 @@
-﻿-- Function: public."_determineAdminAreas"()
+-- Function: public."_setState"()
 
-DROP FUNCTION IF EXISTS public."5293eb9d34b3de48539ef881b7d2e174"();
+DROP FUNCTION IF EXISTS public."075363380323b4799196ff5108cc951d"();
 DROP TYPE IF EXISTS rel_way;
 
 CREATE TYPE rel_way AS (linestring geometry, sequence_id integer);
 
-CREATE OR REPLACE FUNCTION public."5293eb9d34b3de48539ef881b7d2e174"()
+CREATE OR REPLACE FUNCTION public."075363380323b4799196ff5108cc951d"()
   RETURNS void AS
 $BODY$
 DECLARE
@@ -27,7 +27,9 @@ DECLARE
 	relation_way rel_way;
 BEGIN
 
-FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrative' AND to_number(tags->'admin_level','99') >= 8)) LOOP
+UPDATE edges_routing SET is_inside = false;
+
+FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrative' AND to_number(tags->'admin_level','99') = 2 AND tags->'ISO3166-1:alpha2' IS NOT NULL)) LOOP
 	area := null;
 	used_members := null;
 	FOR member_id IN (SELECT rm.relation_id FROM relation_members AS rm JOIN ways AS w ON rm.member_id = w.id WHERE rm.relation_id = relation.id) LOOP
@@ -70,14 +72,14 @@ FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrati
 		y_max := (ST_YMax(area)*10000000)::integer;
 	--	RAISE NOTICE '[%,%][%,%]', x_min, y_min, x_max, y_max;
 		counter := 0;
-		FOR edge IN (SELECT * FROM edges_routing WHERE (
-			x_min <= edges_routing.source_lon AND edges_routing.source_lon <= x_max 
-			AND y_min <= edges_routing.source_lat AND edges_routing.source_lat <= y_max 
-			AND x_min <= edges_routing.target_lon AND edges_routing.target_lon <= x_max 
-			AND y_min <= edges_routing.target_lat AND edges_routing.target_lat <= y_max
-			AND ST_Within(edges_routing.geom, area) 
+	--	FOR edge IN (SELECT * FROM edges_routing WHERE (
+	--		x_min <= edges_routing.source_lon AND edges_routing.source_lon <= x_max 
+	--		AND y_min <= edges_routing.source_lat AND edges_routing.source_lat <= y_max 
+	--		AND x_min <= edges_routing.target_lon AND edges_routing.target_lon <= x_max 
+	--		AND y_min <= edges_routing.target_lat AND edges_routing.target_lat <= y_max
+	--		AND ST_Within(edges_routing.geom, area) 
 --			AND ST_Contains(area, ST_StartPoint(edge.geom)) AND ST_Contains(area, ST_EndPoint(edge.geom))
-		)) LOOP
+	--	)) LOOP
 			--IF (x_min <= edge.source_lon AND edge.source_lon <= x_max AND y_min <= edge.source_lat AND edge.source_lat <= y_max AND x_min <= edge.target_lon AND edge.target_lon <= x_max AND y_min <= edge.target_lat AND edge.target_lat <= y_max) THEN
 			--	RAISE NOTICE 'is in box';
 				
@@ -85,12 +87,17 @@ FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrati
 	--				
 	--				ST_Contains(area, ST_StartPoint(edge.geom)) AND ST_Contains(area, ST_EndPoint(edge.geom))
 	--			) THEN
-					UPDATE edges_routing SET is_inside = true WHERE id = edge.id;
+					UPDATE edges_routing SET state = relation.tags->'ISO3166-1:alpha2' WHERE (
+			x_min <= edges_routing.source_lon AND edges_routing.source_lon <= x_max 
+			AND y_min <= edges_routing.source_lat AND edges_routing.source_lat <= y_max 
+			AND x_min <= edges_routing.target_lon AND edges_routing.target_lon <= x_max 
+			AND y_min <= edges_routing.target_lat AND edges_routing.target_lat <= y_max
+			AND ST_Within(edges_routing.geom, area)); 
 	--			END IF;
 				
 			--END IF;
-			counter := counter + 1;
-		END LOOP;
+	--		counter := counter + 1;
+	--	END LOOP;
 --		RAISE NOTICE 'operations = %',counter;
 		total := total + counter;
 	ELSE
@@ -102,11 +109,11 @@ END;
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION public."5293eb9d34b3de48539ef881b7d2e174"()
+ALTER FUNCTION public."075363380323b4799196ff5108cc951d"()
   OWNER TO postgres;
 
 
-SELECT public."5293eb9d34b3de48539ef881b7d2e174"();
+SELECT public."075363380323b4799196ff5108cc951d"();
 
 DROP TYPE rel_way;
-DROP FUNCTION public."5293eb9d34b3de48539ef881b7d2e174"();
+DROP FUNCTION public."075363380323b4799196ff5108cc951d"();
