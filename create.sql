@@ -57,11 +57,11 @@ CREATE INDEX road_types_type_id_idx
 
 CREATE TABLE public.speed_map
 (
-  road_type integer NOT NULL,
+  type_id integer NOT NULL,
   state character(2) NOT NULL,
   speed_inside integer,
   speed_outside integer,
-  CONSTRAINT speed_map_pkey PRIMARY KEY (road_type, state)
+  CONSTRAINT speed_map_pkey PRIMARY KEY (type_id, state)
 )
 WITH (
   OIDS=FALSE
@@ -70,13 +70,63 @@ ALTER TABLE public.speed_map
   OWNER TO postgres;
 
 -- Index: public.speed_map_road_type_state_idx
-
 -- DROP INDEX public.speed_map_road_type_state_idx;
-
 CREATE INDEX speed_map_road_type_state_idx
   ON public.speed_map
   USING btree
-  (road_type, state COLLATE pg_catalog."default");
+  (type_id, state COLLATE pg_catalog."default");
+  
+  
+-- ***************************** TRAFFIC ZONES *****************************
+-- Table: public.traffic_zones
+-- DROP TABLE public.traffic_zones;
+
+CREATE TABLE public.traffic_zones
+(
+  zone_id integer NOT NULL,
+  name text,
+  CONSTRAINT traffic_zones_pkey PRIMARY KEY (zone_id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public.traffic_zones
+  OWNER TO postgres;
+
+-- Index: public.traffic_zones_zone_id_idx
+-- DROP INDEX public.traffic_zones_zone_id_idx;
+
+CREATE INDEX traffic_zones_zone_id_idx
+  ON public.traffic_zones
+  USING btree
+  (zone_id);
+  
+-- ***************************** TRAFFIC SPEED MAP *****************************
+-- Table: public.traffic_speed_map
+-- DROP TABLE public.traffic_speed_map;
+
+CREATE TABLE public.traffic_speed_map
+(
+  zone_id integer NOT NULL,
+  state character(2) NOT NULL,
+  speed_inside integer,
+  speed_outside integer,
+  CONSTRAINT traffic_speed_map_pkey PRIMARY KEY (zone_id, state)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public.traffic_speed_map
+  OWNER TO postgres;
+
+-- Index: public.traffic_speed_map_traffic_zone_state_idx
+-- DROP INDEX public.traffic_speed_map_traffic_zone_state_idx;
+
+CREATE INDEX traffic_speed_map_traffic_zone_state_idx
+  ON public.traffic_speed_map
+  USING btree
+  (zone_id, state COLLATE pg_catalog."default");
+
 
 -- ***************************** NODES *****************************
 -- Table: public.nodes_routing

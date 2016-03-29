@@ -72,14 +72,14 @@ FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrati
 		y_max := (ST_YMax(area)*10000000)::integer;
 	--	RAISE NOTICE '[%,%][%,%]', x_min, y_min, x_max, y_max;
 		counter := 0;
---		FOR edge IN (SELECT * FROM edges_routing WHERE (
---			x_min <= edges_routing.source_lon AND edges_routing.source_lon <= x_max 
---			AND y_min <= edges_routing.source_lat AND edges_routing.source_lat <= y_max 
---			AND x_min <= edges_routing.target_lon AND edges_routing.target_lon <= x_max 
---			AND y_min <= edges_routing.target_lat AND edges_routing.target_lat <= y_max
---			AND ST_Within(edges_routing.geom, area) 
+		FOR edge IN (SELECT * FROM edges_routing WHERE (
+			x_min <= edges_routing.source_lon AND edges_routing.source_lon <= x_max 
+			AND y_min <= edges_routing.source_lat AND edges_routing.source_lat <= y_max 
+			AND x_min <= edges_routing.target_lon AND edges_routing.target_lon <= x_max 
+			AND y_min <= edges_routing.target_lat AND edges_routing.target_lat <= y_max
+			AND ST_Within(edges_routing.geom, area) 
 --			AND ST_Contains(area, ST_StartPoint(edge.geom)) AND ST_Contains(area, ST_EndPoint(edge.geom))
---		)) LOOP
+		)) LOOP
 			--IF (x_min <= edge.source_lon AND edge.source_lon <= x_max AND y_min <= edge.source_lat AND edge.source_lat <= y_max AND x_min <= edge.target_lon AND edge.target_lon <= x_max AND y_min <= edge.target_lat AND edge.target_lat <= y_max) THEN
 			--	RAISE NOTICE 'is in box';
 				
@@ -87,17 +87,12 @@ FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrati
 	--				
 	--				ST_Contains(area, ST_StartPoint(edge.geom)) AND ST_Contains(area, ST_EndPoint(edge.geom))
 	--			) THEN
-					UPDATE edges_routing SET is_inside = true WHERE (
-			x_min <= edges_routing.source_lon AND edges_routing.source_lon <= x_max 
-			AND y_min <= edges_routing.source_lat AND edges_routing.source_lat <= y_max 
-			AND x_min <= edges_routing.target_lon AND edges_routing.target_lon <= x_max 
-			AND y_min <= edges_routing.target_lat AND edges_routing.target_lat <= y_max
-			AND ST_Within(edges_routing.geom, area));
+					UPDATE edges_routing SET is_inside = true WHERE id = edge.id;
 	--			END IF;
 				
 			--END IF;
---			counter := counter + 1;
---		END LOOP;
+			counter := counter + 1;
+		END LOOP;
 --		RAISE NOTICE 'operations = %',counter;
 		total := total + counter;
 	ELSE

@@ -7,4 +7,4 @@
 -- _divideWay.sql
 -- _setInside.sql
 -- _setState.sql
--- _determineSpeed.sql
+-- _setSpeed.sql

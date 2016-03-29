@@ -1,7 +1,8 @@
-﻿-- ************************************** FORWARD INSIDE **************************************
-UPDATE e
+﻿-- ******************************************************************* TYPES *******************************************************************
+-- ************************************** FORWARD INSIDE **************************************
+UPDATE edges_routing
 SET 
-	speed_forward = s.speed_inside,
+	speed_forward = s.speed_inside
 FROM edges_routing AS e INNER JOIN 
 	speed_map AS s
 	ON (
@@ -9,14 +10,14 @@ FROM edges_routing AS e INNER JOIN
 		AND e.road_type = s.road_type
 	)
 WHERE (
-	e.speed_forward <> -1
+	e.speed_forward = -1
 	AND e.is_inside IS TRUE
 );
 
 -- ************************************** FORWARD OUTSIDE **************************************
-UPDATE e
+UPDATE edges_routing
 SET 
-	speed_forward = s.speed_outside,
+	speed_forward = s.speed_outside
 FROM edges_routing AS e INNER JOIN 
 	speed_map AS s
 	ON (
@@ -24,14 +25,14 @@ FROM edges_routing AS e INNER JOIN
 		AND e.road_type = s.road_type
 	)
 WHERE (
-	e.speed_forward <> -1
+	e.speed_forward = -1
 	AND e.is_inside IS FALSE
 );
 
 -- ************************************** BACKWARD INSIDE **************************************
-UPDATE e
+UPDATE edges_routing
 SET 
-	speed_backward = s.speed_inside,
+	speed_backward = s.speed_inside
 FROM edges_routing AS e INNER JOIN  
 	speed_map AS s
 	ON (
@@ -39,14 +40,14 @@ FROM edges_routing AS e INNER JOIN
 		AND e.road_type = s.road_type
 	)
 WHERE (
-	e.speed_backward <> -1
+	e.speed_backward = -1
 	AND e.is_inside IS TRUE
 );
 
 -- ************************************** BACKWARD OUTSIDE **************************************
-UPDATE e
+UPDATE edges_routing
 SET 
-	speed_backward = s.speed_inside,
+	speed_backward = s.speed_inside
 FROM edges_routing AS e INNER JOIN 
 	speed_map AS s
 	ON (
@@ -54,11 +55,73 @@ FROM edges_routing AS e INNER JOIN
 		AND e.road_type = s.road_type
 	)
 WHERE (
-	e.speed_backward <> -1
+	e.speed_backward = -1
 	AND e.is_inside IS FALSE
 );
 
 
+-- ******************************************************************* ZONES *******************************************************************
+-- ************************************** FORWARD INSIDE **************************************
+UPDATE edges_routing
+SET 
+	speed_forward = s.speed_inside
+FROM edges_routing AS e JOIN ways AS w
+	ON e.osm_id = w.id
+	INNER JOIN 
+	traffic_speed_map AS s
+	ON (
+		e.state = s.state
+		AND e.road_type = s.road_type
+	)
+WHERE (
+	e.speed_forward = -1
+	AND e.is_inside IS TRUE
+);
+
+-- ************************************** FORWARD OUTSIDE **************************************
+UPDATE edges_routing
+SET 
+	speed_forward = s.speed_outside
+FROM edges_routing AS e INNER JOIN 
+	traffic_speed_map AS s
+	ON (
+		e.state = s.state
+		AND e.road_type = s.road_type
+	)
+WHERE (
+	e.speed_forward = -1
+	AND e.is_inside IS FALSE
+);
+
+-- ************************************** BACKWARD INSIDE **************************************
+UPDATE edges_routing
+SET 
+	speed_backward = s.speed_inside
+FROM edges_routing AS e INNER JOIN  
+	traffic_speed_map AS s
+	ON (
+		e.state = s.state
+		AND e.road_type = s.road_type
+	)
+WHERE (
+	e.speed_backward = -1
+	AND e.is_inside IS TRUE
+);
+
+-- ************************************** BACKWARD OUTSIDE **************************************
+UPDATE edges_routing
+SET 
+	speed_backward = s.speed_inside
+FROM edges_routing AS e INNER JOIN 
+	traffic_speed_map AS s
+	ON (
+		e.state = s.state
+		AND e.road_type = s.road_type
+	)
+WHERE (
+	e.speed_backward = -1
+	AND e.is_inside IS FALSE
+);
 
 
 --SELECT * FROM edges_routing LIMIT 20;
