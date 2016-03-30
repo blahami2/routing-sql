@@ -1,13 +1,9 @@
 -- Function: public."_setState"()
+                
+DROP TYPE IF EXISTS a5293eb9d34b3de48539ef881b7d2e174; 
+CREATE TYPE a5293eb9d34b3de48539ef881b7d2e174 AS (linestring geometry, sequence_id integer);
 
-DROP FUNCTION IF EXISTS public."075363380323b4799196ff5108cc951d"();
-DROP TYPE IF EXISTS rel_way;
-
-CREATE TYPE rel_way AS (linestring geometry, sequence_id integer);
-
-CREATE OR REPLACE FUNCTION public."075363380323b4799196ff5108cc951d"()
-  RETURNS void AS
-$BODY$
+DO $$
 DECLARE
 	way ways;
 	relation relations;
@@ -24,7 +20,7 @@ DECLARE
 	counter integer := 0;
 	total integer := 0;
 	used_members integer[];
-	relation_way rel_way;
+	relation_way a5293eb9d34b3de48539ef881b7d2e174;
 BEGIN
 
 UPDATE edges_routing SET is_inside = false;
@@ -105,15 +101,6 @@ FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrati
 	END IF;
 END LOOP;
 --RAISE NOTICE 'operations total: %', total;
-END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION public."075363380323b4799196ff5108cc951d"()
-  OWNER TO postgres;
+END $$;
 
-
-SELECT public."075363380323b4799196ff5108cc951d"();
-
-DROP TYPE rel_way;
-DROP FUNCTION public."075363380323b4799196ff5108cc951d"();
+DROP TYPE a5293eb9d34b3de48539ef881b7d2e174;

@@ -1,11 +1,7 @@
 --SELECT *, tags->'ISO3166-1:alpha2' FROM relations WHERE (tags->'boundary' = 'administrative' AND to_number(tags->'admin_level','99') = 2 AND tags->'ISO3166-1:alpha2' IS NOT NULL)
 -- Function: public."_setState"()
 
-DROP FUNCTION IF EXISTS public."fba3dd4c94104260aeee0e3738676077"();
-
-CREATE OR REPLACE FUNCTION public."fba3dd4c94104260aeee0e3738676077"()
-  RETURNS void AS
-$BODY$
+DO $$
 DECLARE
 	edge edges_routing;
 	speed speed_map;
@@ -58,17 +54,7 @@ FOR edge IN (SELECT * FROM edges_routing WHERE speed_forward = -1 OR speed_backw
 	*/
 END LOOP;
 
-END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
-ALTER FUNCTION public."fba3dd4c94104260aeee0e3738676077"()
-  OWNER TO postgres;
-
-
-SELECT public."fba3dd4c94104260aeee0e3738676077"();
-
-DROP FUNCTION public."fba3dd4c94104260aeee0e3738676077"();
+END $$;
 
 
 
