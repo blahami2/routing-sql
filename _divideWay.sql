@@ -44,6 +44,7 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
 	node_array := NULL;
 	road_type := 1;
   	IF exist(way.tags, 'maxspeed') THEN -- maxspeed tag
+--    RAISE NOTICE 'maxspeed tag for way % = %', way.id, way.tags->'maxspeed';
   		IF way.tags->'maxspeed' SIMILAR TO '(km/h|kmh|kph)' THEN
   			speed_fw := to_number(substring(way.tags->'maxspeed' from '#"%#" (km/h|kmh|kph)' for '#'), '999999999');
   		ELSE 
@@ -51,7 +52,9 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   				speed_fw := to_number(substring(way.tags->'maxspeed' from '#"%#" mph' for '#'), '999999999') * 1.609;
   			ELSE
   				IF way.tags->'maxspeed' SIMILAR TO 'knots' THEN
-  					speed_fw := to_number(substring(way.tags->'maxspeed' from '#"%#" knots' for '#'), '999999999') * 1.852;
+  					speed_fw := to_number(substring(way.tags->'maxspeed' from '#"%#" knots' for '#'), '999999999') * 1.852;   
+  				ELSE
+					  speed_fw := to_number(substring(way.tags->'maxspeed' from '#"%#"' for '#'), '999999999');
   				END IF;
   			END IF;
   		END IF;
@@ -66,7 +69,9 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   					speed_fw := to_number(substring(way.tags->'maxspeed:forward' from '#"%#" mph' for '#'), '999999999') * 1.609;
   				ELSE
   					IF way.tags->'maxspeed:forward' SIMILAR TO 'knots' THEN
-  						speed_fw := to_number(substring(way.tags->'maxspeed:forward' from '#"%#" knots' for '#'), '999999999') * 1.852;
+  						speed_fw := to_number(substring(way.tags->'maxspeed:forward' from '#"%#" knots' for '#'), '999999999') * 1.852; 
+  				  ELSE
+					    speed_fw := to_number(substring(way.tags->'maxspeed' from '#"%#"' for '#'), '999999999');
   					END IF;
   				END IF;
   			END IF;
@@ -80,7 +85,9 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   				speed_bw := to_number(substring(way.tags->'maxspeed:backward' from '#"%#" mph' for '#'), '999999999') * 1.609;
   			ELSE
   				IF way.tags->'maxspeed:backward' SIMILAR TO 'knots' THEN
-  					speed_bw := to_number(substring(way.tags->'maxspeed:backward' from '#"%#" knots' for '#'), '999999999') * 1.852;
+  					speed_bw := to_number(substring(way.tags->'maxspeed:backward' from '#"%#" knots' for '#'), '999999999') * 1.852;  
+  				ELSE
+					  speed_bw := to_number(substring(way.tags->'maxspeed' from '#"%#"' for '#'), '999999999');
   				END IF;
   			END IF;
   		END IF;
@@ -237,4 +244,3 @@ END $$;
 --  COST 100;
 
 --SELECT ST_AsText(geom), * FROM edges_routing LIMIT 30; 
-COMMIT;
