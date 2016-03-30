@@ -94,8 +94,11 @@ FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrati
 	ELSE
 --		RAISE NOTICE 'area = %', ST_AsText(area);
 	END IF;
-END LOOP;
+END LOOP; 
+--COMMIT;
 --RAISE NOTICE 'operations total: %', total;
 END $$;
 
 DROP TYPE a5293eb9d34b3de48539ef881b7d2e174;
+
+SELECT COUNT(*) FROM edges_routing WHERE is_inside IS TRUE;

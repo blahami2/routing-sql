@@ -1,3 +1,12 @@
+DROP TABLE IF EXISTS public.edges_routing;
+DROP TABLE IF EXISTS public.nodes_routing;
+DROP TABLE IF EXISTS public.traffic_speed_map;
+DROP TABLE IF EXISTS public.traffic_zones;
+DROP TABLE IF EXISTS public.speed_map;
+DROP TABLE IF EXISTS public.road_types;
+DROP SEQUENCE IF EXISTS public.edges_routing_inc;
+DROP SEQUENCE IF EXISTS public.nodes_routing_inc;
+
 -- ***************************** EDGE SEQUENCE *****************************
 -- Sequence: public.edges_routing_inc
 -- DROP SEQUENCE public.edges_routing_inc;

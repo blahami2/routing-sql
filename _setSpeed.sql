@@ -54,7 +54,7 @@ FOR edge IN (SELECT * FROM edges_routing WHERE speed_forward = -1 OR speed_backw
 	*/
 END LOOP;
 
-END $$;
+END $$;        
 
 
 

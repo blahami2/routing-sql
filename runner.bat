@@ -13,19 +13,19 @@ REM osmosis --read-pbf %1 --log-progress --write-pgsql authFile=dbauth.txt
 echo osmosis time: %time% >> log.txt  
 echo osmosis time: %time%
 
-REM psql -U postgres -d %database% -a -f create.sql > NUL   
+psql -U postgres -d %database% -a -f create.sql > NUL   
 echo create.sql time: %time% >> log.txt      
 echo create.sql time: %time%
 
-REM psql -U postgres -d %database% -a -f _isValidWay.sql > NUL 
+psql -U postgres -d %database% -a -f _isValidWay.sql > NUL 
 echo _isValidWay.sql time: %time% >> log.txt 
 echo _isValidWay.sql time: %time%
 
-REM psql -U postgres -d %database% -a -f create_views.sql > NUL   
+psql -U postgres -d %database% -a -f create_views.sql > NUL   
 echo create_views.sql time: %time% >> log.txt 
 echo create_views.sql time: %time%
 
-REM psql -U postgres -d %database% -a -f insert.sql > NUL   
+psql -U postgres -d %database% -a -f insert.sql > NUL   
 echo insert.sql time: %time% >> log.txt      
 echo insert.sql time: %time% 
    

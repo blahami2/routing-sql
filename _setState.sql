@@ -103,5 +103,4 @@ END $$;
 
 DROP TYPE a5293eb9d34b3de48539ef881b7d2e174;
         
-COMMIT;
 
