@@ -1,7 +1,7 @@
 DO $$
 DECLARE
 --	CREATE TYPE edge_type AS TABLE of edges_routing%rowtype;
-  way ways%rowtype;
+	way ways;
 	node_id bigint;
 	source_rec nodes_routing%rowtype;
 	target_rec nodes_routing%rowtype;
@@ -24,9 +24,25 @@ BEGIN
 -- **************************************************************************************** DELETING CURRENT ROWS ****************************************************************************************
 DELETE FROM edges_routing;
 -- **************************************************************************************** EXTRACT SPEED ****************************************************************************************
-FOR way IN (SELECT * FROM ways) LOOP
-  IF public."_isValidWay"(way) THEN
-  --	RAISE NOTICE 'valid way = %', way;
+FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
+-- 	RAISE NOTICE 'valid way = %', ST_AsText(way.linestring);
+	node_id := 0;
+	source_rec := NULL;
+	target_rec := NULL;
+	node_rec := NULL;
+	speed_fw := -1;
+	speed_bw := -1;
+	paid := false;
+	oneway := false;
+	counter := 0;
+	idx := 0;
+	idx_counter := 0;
+	node_set := NULL;
+	dump := NULL;
+	node_split := NULL;
+	edge_geom := NULL;
+	node_array := NULL;
+	road_type := 1;
   	IF exist(way.tags, 'maxspeed') THEN -- maxspeed tag
   		IF way.tags->'maxspeed' SIMILAR TO '(km/h|kmh|kph)' THEN
   			speed_fw := to_number(substring(way.tags->'maxspeed' from '#"%#" (km/h|kmh|kph)' for '#'), '999999999');
@@ -100,6 +116,7 @@ FOR way IN (SELECT * FROM ways) LOOP
   			IF source_rec IS NULL THEN
   			ELSE
   				edge_geom = ST_SetSRID(edge_geom, 4326);
+ -- 				RAISE NOTICE 'inserting geom: %', ST_AsText(edge_geom); 
   				INSERT INTO edges_routing 
   					(osm_id, is_paid, is_oneway, is_inside, speed_forward, speed_backward, length, road_type, state, geom, source_id, target_id, source_lon, source_lat, target_lon, target_lat)
   					VALUES
@@ -121,6 +138,7 @@ FOR way IN (SELECT * FROM ways) LOOP
   					, ST_Y(target_rec.geom) * 10000000		-- target_latitude
   					);
   				edge_geom := ST_MakeLine(node_array[counter]);
+ -- 				RAISE NOTICE 'geom after insert: %', ST_AsText(edge_geom); 
   --				counter := counter - 1;
   			END IF;
   			source_rec := node_rec;
@@ -212,9 +230,11 @@ FOR way IN (SELECT * FROM ways) LOOP
   		--END IF;
   	END LOOP;*/
   --	RETURN edge_list;
-  END IF;
 END LOOP;
 END $$;
 --RAISE NOTICE 'i want to print % and %', var1,var2;$BODY$
 --  LANGUAGE plpgsql VOLATILE
 --  COST 100;
+
+--SELECT ST_AsText(geom), * FROM edges_routing LIMIT 30; 
+COMMIT;
