@@ -23,8 +23,6 @@ DECLARE
 	relation_way a5293eb9d34b3de48539ef881b7d2e174;
 BEGIN
 
-UPDATE edges_routing SET is_inside = false;
-
 FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrative' AND to_number(tags->'admin_level','99') = 2 AND tags->'ISO3166-1:alpha2' IS NOT NULL)) LOOP
 	area := null;
 	used_members := null;
@@ -104,3 +102,6 @@ END LOOP;
 END $$;
 
 DROP TYPE a5293eb9d34b3de48539ef881b7d2e174;
+        
+COMMIT;
+
