@@ -1,49 +1,87 @@
 @echo off
 
 REM -- will contain all the scripts
+:start
 set start_time=%time%
 echo ---------------------------------------------------------------------------------------- >> log.txt
 echo %date% %time% >> log.txt
 echo Running database import: %1 >> log.txt
-echo Start: %time% >> log.txt
+echo Start: %time% >> log.txt 
+echo Running database import: %1
+echo Start: %time%
 
-set database=postgis_prague
-REM import data
-REM osmosis --read-pbf %1 --log-progress --write-pgsql authFile=dbauth.txt 
+set database=postgis_de
+set dbuser=postgres
+set inputpbf="C:\Routing\Data\DE.pbf"
+::WARNING!!! Do not forget to edit dbauth.txt as well!!!
+
+::goto index
+
+:create
+psql -U %dbuser% -d %database% -f "C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2\postgis.sql" > NUL
+psql -U %dbuser% -d %database% -f "C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2\spatial_ref_sys.sql" > NUL  
+psql -U %dbuser% -d %database% -c "CREATE EXTENSION hstore;" > NUL
+::psql -U %dbuser% -d %database% -f "C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2\hstore-new.sql"
+psql -U %dbuser% -d %database% -f "C:\Program Files (x86)\osmosis\script\pgsnapshot_schema_0.6.sql" > NUL
+psql -U %dbuser% -d %database% -f "C:\Program Files (x86)\osmosis\script\pgsnapshot_schema_0.6_linestring.sql" > NUL  
+
+  
+echo database creation time: %time% >> log.txt  
+echo database creation time: %time%
+
+:import
+call osmosis --read-pbf %inputpbf% --log-progress --write-pgsql authFile=dbauth.txt
+goto osmtime 
+:update
+call osmosis --read-pbf %1 --log-progress --write-pgsql-change authFile=dbauth.txt
+:osmtime  
 echo osmosis time: %time% >> log.txt  
 echo osmosis time: %time%
 
-psql -U postgres -d %database% -a -f create.sql > NUL   
+::goto end
+
+:index
+psql -U %dbuser% -d %database% -a -f index_osm.sql > NUL 
+
+:tables
+psql -U %dbuser% -d %database% -a -f create.sql > NUL   
 echo create.sql time: %time% >> log.txt      
 echo create.sql time: %time%
 
-psql -U postgres -d %database% -a -f _isValidWay.sql > NUL 
+:functions
+psql -U %dbuser% -d %database% -a -f _isValidWay.sql > NUL 
 echo _isValidWay.sql time: %time% >> log.txt 
 echo _isValidWay.sql time: %time%
 
-psql -U postgres -d %database% -a -f create_views.sql > NUL   
+:views
+psql -U %dbuser% -d %database% -a -f create_views.sql > NUL   
 echo create_views.sql time: %time% >> log.txt 
 echo create_views.sql time: %time%
 
-psql -U postgres -d %database% -a -f insert.sql > NUL   
+:insert
+psql -U %dbuser% -d %database% -a -f insert.sql > NUL   
 echo insert.sql time: %time% >> log.txt      
 echo insert.sql time: %time% 
-   
-psql -U postgres -d %database% -a -f _divideWay.sql > NUL 
+
+:divide_ways   
+psql -U %dbuser% -d %database% -a -f _divideWay.sql > NUL
 echo _divideWay.sql time: %time% >> log.txt  
 echo _divideWay.sql time: %time%
 
-psql -U postgres -d %database% -a -f _setInside.sql > NUL  
+:set_inside
+psql -U %dbuser% -d %database% -a -f _setInside.sql > NUL  
 echo _setInside.sql time: %time% >> log.txt    
 echo _setInside.sql time: %time%
 
-psql -U postgres -d %database% -a -f _setState.sql > NUL 
+:set_state
+psql -U %dbuser% -d %database% -a -f _setState.sql > NUL 
 echo _setState.sql time: %time% >> log.txt      
 echo _setState.sql time: %time%
-                        
-psql -U postgres -d %database% -a -f _setSpeed.sql > NUL     
+
+:set_speed                        
+psql -U %dbuser% -d %database% -a -f _setSpeed.sql > NUL     
 echo _setSpeed.sql time: %time% >> log.txt    
 echo _setSpeed.sql time: %time%
                                                                     
- 
+:end 
 echo End: %time%s >> log.txt
