@@ -1,10 +1,12 @@
 DROP TABLE IF EXISTS public.edges_routing;
+DROP TABLE IF EXISTS public.edges_data_routing;
 DROP TABLE IF EXISTS public.nodes_routing;
 DROP TABLE IF EXISTS public.traffic_speed_map;
 DROP TABLE IF EXISTS public.traffic_zones;
 DROP TABLE IF EXISTS public.speed_map;
 DROP TABLE IF EXISTS public.road_types;
-DROP SEQUENCE IF EXISTS public.edges_routing_inc;
+DROP SEQUENCE IF EXISTS public.edges_routing_inc; 
+DROP SEQUENCE IF EXISTS public.edges_data_routing_inc;
 DROP SEQUENCE IF EXISTS public.nodes_routing_inc;
 
 -- ***************************** EDGE SEQUENCE *****************************
@@ -18,6 +20,19 @@ CREATE SEQUENCE public.edges_routing_inc
   START 1
   CACHE 1;
 ALTER TABLE public.edges_routing_inc
+  OWNER TO postgres;
+  
+-- ***************************** EDGE DATA SEQUENCE *****************************
+-- Sequence: public.edges_routing_inc
+-- DROP SEQUENCE public.edges_routing_inc;
+
+CREATE SEQUENCE public.edges_data_routing_inc
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1
+  CACHE 1;
+ALTER TABLE public.edges_data_routing_inc
   OWNER TO postgres;
                                 
 -- ***************************** NODE SEQUENCE *****************************
@@ -182,16 +197,9 @@ CREATE INDEX nodes_routing_osm_id_idx
 CREATE TABLE public.edges_routing
 (
   id bigint NOT NULL DEFAULT nextval('edges_routing_inc'::regclass),
-  osm_id bigint,
-  is_paid boolean,
-  is_oneway boolean,
-  is_inside boolean,
+  data_id bigint,
   speed_forward integer,
   speed_backward integer,
-  length double precision,
-  road_type integer,
-  state character(2),
-  geom geometry(Geometry,4326),
   source_id bigint,
   target_id bigint,
   source_lat integer,
@@ -204,6 +212,9 @@ CREATE TABLE public.edges_routing
       ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT nodes_target_idx FOREIGN KEY (target_id)
       REFERENCES public.nodes_routing (id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT edges_data_idx FOREIGN KEY (data_id)
+      REFERENCES public.edges_data_routing (id) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION
 )
 WITH (
@@ -221,14 +232,14 @@ CREATE INDEX edges_routing_id_idx
   USING btree
   (id);
 
+  
 -- Index: public.edges_routing_osm_id_idx
-
 -- DROP INDEX public.edges_routing_osm_id_idx;
 
-CREATE INDEX edges_routing_osm_id_idx
+CREATE INDEX edges_data_routing_id_idx
   ON public.edges_routing
   USING btree
-  (osm_id);
+  (data_id);
 
 -- Index: public.edges_routing_source_lat_idx
 
@@ -283,4 +294,34 @@ CREATE INDEX fki_nodes_target_idx
   ON public.edges_routing
   USING btree
   (target_id);
+  
+-- ***************************** EDGES DATA *****************************
+-- Table: public.edges_data_routing
+-- DROP TABLE public.edges_data_routing;  
+CREATE TABLE public.edges_data_routing
+(
+  id bigint NOT NULL DEFAULT nextval('edges_data_routing_inc'::regclass),
+  osm_id bigint,
+  is_paid boolean,
+  is_inside boolean,
+  length double precision,
+  road_type integer,
+  state character(2),
+  geom geometry(Geometry,4326),
+  CONSTRAINT edges_data_routing_pkey PRIMARY KEY (id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public.edges_data_routing
+  OWNER TO postgres;
 
+
+-- Index: public.edges_routing_osm_id_idx
+
+-- DROP INDEX public.edges_routing_osm_id_idx;
+
+CREATE INDEX edges_data_routing_osm_id_idx
+  ON public.edges_data_routing
+  USING btree
+  (osm_id);
