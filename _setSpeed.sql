@@ -3,25 +3,21 @@
 
 DO $$
 DECLARE
-	edge edges_routing;
-	speed speed_map;
+	edge edges_routing%rowtype;
+	speed_m speed_map%rowtype;
+  edge_data edges_data_routing%rowtype;
 BEGIN
 
-FOR edge IN (SELECT * FROM edges_routing WHERE speed_forward = -1 OR speed_backward = -1) LOOP
-	SELECT * INTO speed FROM speed_map WHERE (speed_map.state = edge.state AND speed_map.type_id = edge.road_type);
-	IF edge.is_inside THEN
-		IF edge.speed_forward = -1 THEN 
-			UPDATE edges_routing SET speed_forward = speed.speed_inside WHERE id = edge.id;
-		END IF;
-		IF edge.speed_backward = -1 THEN
-			UPDATE edges_routing SET speed_backward = speed.speed_inside WHERE id = edge.id;
+FOR edge IN (SELECT * FROM edges_routing WHERE speed = -1) LOOP
+  SELECT * INTO edge_data FROM edges_data_routing d WHERE (d.id = edge.data_id);
+	SELECT * INTO speed_m FROM speed_map WHERE (speed_map.state = edge_data.state AND speed_map.type_id = edge_data.road_type);
+	IF edge_data.is_inside THEN
+		IF edge.speed = -1 THEN 
+			UPDATE edges_routing SET speed = speed_m.speed_inside WHERE id = edge.id;
 		END IF;
 	ELSE
-		IF edge.speed_forward = -1 THEN
-			UPDATE edges_routing SET speed_forward = speed.speed_outside WHERE id = edge.id;
-		END IF;
-		IF edge.speed_backward = -1 THEN
-			UPDATE edges_routing SET speed_backward = speed.speed_outside WHERE id = edge.id;
+		IF edge.speed = -1 THEN
+			UPDATE edges_routing SET speed = speed_m.speed_outside WHERE id = edge.id;
 		END IF;
 	END IF;
 	/* -- TODO traffic zones
