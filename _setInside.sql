@@ -8,7 +8,7 @@ DECLARE
 	way ways;
 	relation relations;
 	rel_member relation_members;
-	edge edges_routing;
+	edge edges_data_routing;
 	linestring geometry;
 	area geometry;
 	area_approx geometry;
@@ -23,7 +23,7 @@ DECLARE
 	relation_way a5293eb9d34b3de48539ef881b7d2e174;
 BEGIN
 
-UPDATE edges_routing SET is_inside = false;
+--UPDATE edges_data_routing SET is_inside = false;
 
 FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrative' AND to_number(tags->'admin_level','99') >= 8)) LOOP
 	area := null;
@@ -68,12 +68,12 @@ FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrati
 		y_max := (ST_YMax(area)*10000000)::integer;
 	--	RAISE NOTICE '[%,%][%,%]', x_min, y_min, x_max, y_max;
 		counter := 0;
-		FOR edge IN (SELECT * FROM edges_routing WHERE (
-			x_min <= edges_routing.source_lon AND edges_routing.source_lon <= x_max 
-			AND y_min <= edges_routing.source_lat AND edges_routing.source_lat <= y_max 
-			AND x_min <= edges_routing.target_lon AND edges_routing.target_lon <= x_max 
-			AND y_min <= edges_routing.target_lat AND edges_routing.target_lat <= y_max
-			AND ST_Within(edges_routing.geom, area) 
+		FOR edge IN (SELECT * FROM edges_data_routing WHERE (
+			x_min <= edges_data_routing.source_lon AND edges_data_routing.source_lon <= x_max 
+			AND y_min <= edges_data_routing.source_lat AND edges_data_routing.source_lat <= y_max 
+			AND x_min <= edges_data_routing.target_lon AND edges_data_routing.target_lon <= x_max 
+			AND y_min <= edges_data_routing.target_lat AND edges_data_routing.target_lat <= y_max
+			AND ST_Within(edges_data_routing.geom, area) 
 --			AND ST_Contains(area, ST_StartPoint(edge.geom)) AND ST_Contains(area, ST_EndPoint(edge.geom))
 		)) LOOP
 			--IF (x_min <= edge.source_lon AND edge.source_lon <= x_max AND y_min <= edge.source_lat AND edge.source_lat <= y_max AND x_min <= edge.target_lon AND edge.target_lon <= x_max AND y_min <= edge.target_lat AND edge.target_lat <= y_max) THEN
@@ -83,7 +83,7 @@ FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrati
 	--				
 	--				ST_Contains(area, ST_StartPoint(edge.geom)) AND ST_Contains(area, ST_EndPoint(edge.geom))
 	--			) THEN
-					UPDATE edges_routing SET is_inside = true WHERE id = edge.id;
+					UPDATE edges_data_routing SET is_inside = true WHERE id = edge.id;
 	--			END IF;
 				
 			--END IF;
@@ -101,4 +101,4 @@ END $$;
 
 DROP TYPE a5293eb9d34b3de48539ef881b7d2e174;
 
-SELECT COUNT(*) FROM edges_routing WHERE is_inside IS TRUE;
+--SELECT COUNT(*) FROM edges_routing WHERE is_inside IS TRUE;
