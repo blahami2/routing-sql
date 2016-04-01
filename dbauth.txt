@@ -1,5 +1,5 @@
 host=localhost:5432
-database=postgis_de
+database=osm_de
 user=postgres
 password=password
  
