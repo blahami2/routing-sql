@@ -10,13 +10,19 @@ echo Start: %time% >> log.txt
 echo Running database import: %1
 echo Start: %time%
 
-set database=postgis_de
+set database=osm_de
 set dbuser=postgres
 set inputpbf="C:\Routing\Data\DE.pbf"
 ::WARNING!!! Do not forget to edit dbauth.txt as well!!!
 
 ::goto index
 
+:createdb
+dropdb -U %dbuser% %database%
+createdb -U %dbuser% -O %dbuser% -E utf8 -D osm --lc-collate="Czech_Czech Republic.1250" --lc-ctype="Czech_Czech Republic.1250" %database%
+
+:tmp
+::psql -U %dbuser% -d %database% -c "ALTER DATABASE %database% SET temp_tablespaces = 'temporary_hdd';" > NUL  
 :create
 psql -U %dbuser% -d %database% -f "C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2\postgis.sql" > NUL
 psql -U %dbuser% -d %database% -f "C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2\spatial_ref_sys.sql" > NUL  
