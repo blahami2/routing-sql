@@ -47,6 +47,7 @@ DECLARE
 	edge_geom geometry := null;
 	node_array geometry[];
   road_type integer := 1;
+  data_key bigint;
 --	edge_list edge_type; 
 BEGIN       
 -- **************************************************************************************** DELETING CURRENT ROWS ****************************************************************************************
@@ -109,22 +110,25 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   			target_rec := node_rec;
   			IF source_rec IS NULL THEN
   			ELSE
-  				edge_geom = ST_SetSRID(edge_geom, 4326);
+  				edge_geom = ST_SetSRID(edge_geom, 4326);          
  -- 				RAISE NOTICE 'inserting geom: %', ST_AsText(edge_geom); 
 --          RAISE NOTICE 'inserting data: wayid = %, paid = %, oneway = %, isinside = %, speedfw = %, speedbw = %, length = %, roadtype = %, state = %, sourceid = %, targetid = %, sourcelon = %, sourcelat = %, targetlon = %, targetlat = %, geom = %', way.id, paid, oneway, false, speed_fw, speed_bw,(ST_Length(edge_geom, true) / 1000), road_type, 'CZ'::character(2), source_rec.id, target_rec.id,ST_X(source_rec.geom) * 10000000,ST_Y(source_rec.geom) * 10000000, ST_X(target_rec.geom) * 10000000, ST_Y(target_rec.geom) * 10000000, ST_AsText(edge_geom) ;
-  				INSERT INTO edges_routing 
-  					(osm_id, is_paid, is_oneway, is_inside, speed_forward, speed_backward, length, road_type, state, geom, source_id, target_id, source_lon, source_lat, target_lon, target_lat)
+  				INSERT INTO edges_data_routing 
+  					(osm_id, is_paid, is_inside, length, road_type, state, geom)
   					VALUES
   					(way.id::bigint							-- osm_id
   					, paid									-- is_paid
-  					, oneway								-- is_oneway
   					, false									-- is_inside
-  					, speed_fw								-- speed_forward
-  					, speed_bw								-- speed_backward
   					, (ST_Length(edge_geom, true) / 1000)	-- length
   					, road_type							-- road_type
   					, 'CZ'::character(2)					-- state
   					, edge_geom								-- geom
+  					) RETURNING id INTO data_key;
+          INSERT INTO edges_routing 
+  					(data_id, speed, source_id, target_id, source_lon, source_lat, target_lon, target_lat)
+  					VALUES
+  					(data_key							-- osm_id
+  					, speed_fw								-- speed_forward
   					, source_rec.id							-- source_id
   					, target_rec.id							-- target_id
   					, ST_X(source_rec.geom) * 10000000		-- source_longitude
@@ -132,6 +136,20 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   					, ST_X(target_rec.geom) * 10000000		-- target_longitude
   					, ST_Y(target_rec.geom) * 10000000		-- target_latitude
   					);
+          IF oneway IS FALSE THEN
+            INSERT INTO edges_routing 
+    					(data_id, speed, source_id, target_id, source_lon, source_lat, target_lon, target_lat)
+    					VALUES
+    					(data_key							-- osm_id
+    					, speed_bw								-- speed_forward
+    					, target_rec.id							-- source_id
+    					, source_rec.id							-- target_id
+    					, ST_X(target_rec.geom) * 10000000		-- source_longitude
+    					, ST_Y(target_rec.geom) * 10000000		-- source_latitude
+    					, ST_X(source_rec.geom) * 10000000		-- target_longitude
+    					, ST_Y(source_rec.geom) * 10000000		-- target_latitude
+    					);
+          END IF;
   				edge_geom := ST_MakeLine(node_array[counter]);
  -- 				RAISE NOTICE 'geom after insert: %', ST_AsText(edge_geom); 
   --				counter := counter - 1;

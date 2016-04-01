@@ -189,6 +189,38 @@ CREATE INDEX nodes_routing_osm_id_idx
   USING btree
   (osm_id);
 
+  
+-- ***************************** EDGES DATA *****************************
+-- Table: public.edges_data_routing
+-- DROP TABLE public.edges_data_routing;  
+CREATE TABLE public.edges_data_routing
+(
+  id bigint NOT NULL DEFAULT nextval('edges_data_routing_inc'::regclass),
+  osm_id bigint,
+  is_paid boolean,
+  is_inside boolean,
+  length double precision,
+  road_type integer,
+  state character(2),
+  geom geometry(Geometry,4326),
+  CONSTRAINT edges_data_routing_pkey PRIMARY KEY (id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public.edges_data_routing
+  OWNER TO postgres;
+
+
+-- Index: public.edges_routing_osm_id_idx
+
+-- DROP INDEX public.edges_routing_osm_id_idx;
+
+CREATE INDEX edges_data_routing_osm_id_idx
+  ON public.edges_data_routing
+  USING btree
+  (osm_id);
+
 
 -- ***************************** EDGES *****************************
 -- Table: public.edges_routing
@@ -198,8 +230,7 @@ CREATE TABLE public.edges_routing
 (
   id bigint NOT NULL DEFAULT nextval('edges_routing_inc'::regclass),
   data_id bigint,
-  speed_forward integer,
-  speed_backward integer,
+  speed integer,
   source_id bigint,
   target_id bigint,
   source_lat integer,
@@ -294,34 +325,3 @@ CREATE INDEX fki_nodes_target_idx
   ON public.edges_routing
   USING btree
   (target_id);
-  
--- ***************************** EDGES DATA *****************************
--- Table: public.edges_data_routing
--- DROP TABLE public.edges_data_routing;  
-CREATE TABLE public.edges_data_routing
-(
-  id bigint NOT NULL DEFAULT nextval('edges_data_routing_inc'::regclass),
-  osm_id bigint,
-  is_paid boolean,
-  is_inside boolean,
-  length double precision,
-  road_type integer,
-  state character(2),
-  geom geometry(Geometry,4326),
-  CONSTRAINT edges_data_routing_pkey PRIMARY KEY (id)
-)
-WITH (
-  OIDS=FALSE
-);
-ALTER TABLE public.edges_data_routing
-  OWNER TO postgres;
-
-
--- Index: public.edges_routing_osm_id_idx
-
--- DROP INDEX public.edges_routing_osm_id_idx;
-
-CREATE INDEX edges_data_routing_osm_id_idx
-  ON public.edges_data_routing
-  USING btree
-  (osm_id);
