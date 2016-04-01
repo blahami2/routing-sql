@@ -203,6 +203,18 @@ CREATE TABLE public.edges_data_routing
   road_type integer,
   state character(2),
   geom geometry(Geometry,4326),
+  source_id bigint,
+  target_id bigint,
+  source_lat integer,
+  source_lon integer,
+  target_lat integer,
+  target_lon integer, 
+  CONSTRAINT nodes_source_idx FOREIGN KEY (source_id)
+      REFERENCES public.nodes_routing (id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION,
+  CONSTRAINT nodes_target_idx FOREIGN KEY (target_id)
+      REFERENCES public.nodes_routing (id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT edges_data_routing_pkey PRIMARY KEY (id)
 )
 WITH (
@@ -219,7 +231,62 @@ ALTER TABLE public.edges_data_routing
 CREATE INDEX edges_data_routing_osm_id_idx
   ON public.edges_data_routing
   USING btree
-  (osm_id);
+  (osm_id);    
+
+-- Index: public.edges_routing_source_lat_idx
+
+-- DROP INDEX public.edges_routing_source_lat_idx;
+
+CREATE INDEX edges_data_routing_source_lat_idx
+  ON public.edges_data_routing
+  USING btree
+  (source_lat);
+
+-- Index: public.edges_routing_source_lon_idx
+
+-- DROP INDEX public.edges_routing_source_lon_idx;
+
+CREATE INDEX edges_data_routing_source_lon_idx
+  ON public.edges_data_routing
+  USING btree
+  (source_lon);
+
+-- Index: public.edges_routing_target_lat_idx
+
+-- DROP INDEX public.edges_routing_target_lat_idx;
+
+CREATE INDEX edges_data_routing_target_lat_idx
+  ON public.edges_data_routing
+  USING btree
+  (target_lat);
+
+-- Index: public.edges_routing_target_lon_idx
+
+-- DROP INDEX public.edges_data_routing_target_lon_idx;
+
+CREATE INDEX edges_data_routing_target_lon_idx
+  ON public.edges_data_routing
+  USING btree
+  (target_lon);
+  
+  
+-- Index: public.fki_nodes_source_idx
+
+-- DROP INDEX public.fki_nodes_source_idx;
+
+CREATE INDEX fki_data_nodes_source_idx
+  ON public.edges_data_routing
+  USING btree
+  (source_id);
+
+-- Index: public.fki_nodes_target_idx
+
+-- DROP INDEX public.fki_nodes_target_idx;
+
+CREATE INDEX fki_data_nodes_target_idx
+  ON public.edges_data_routing
+  USING btree
+  (target_id);
 
 
 -- ***************************** EDGES *****************************
@@ -233,10 +300,6 @@ CREATE TABLE public.edges_routing
   speed integer,
   source_id bigint,
   target_id bigint,
-  source_lat integer,
-  source_lon integer,
-  target_lat integer,
-  target_lon integer,
   CONSTRAINT edges_routing_pkey PRIMARY KEY (id),
   CONSTRAINT nodes_source_idx FOREIGN KEY (source_id)
       REFERENCES public.nodes_routing (id) MATCH SIMPLE
@@ -271,42 +334,6 @@ CREATE INDEX edges_data_routing_id_idx
   ON public.edges_routing
   USING btree
   (data_id);
-
--- Index: public.edges_routing_source_lat_idx
-
--- DROP INDEX public.edges_routing_source_lat_idx;
-
-CREATE INDEX edges_routing_source_lat_idx
-  ON public.edges_routing
-  USING btree
-  (source_lat);
-
--- Index: public.edges_routing_source_lon_idx
-
--- DROP INDEX public.edges_routing_source_lon_idx;
-
-CREATE INDEX edges_routing_source_lon_idx
-  ON public.edges_routing
-  USING btree
-  (source_lon);
-
--- Index: public.edges_routing_target_lat_idx
-
--- DROP INDEX public.edges_routing_target_lat_idx;
-
-CREATE INDEX edges_routing_target_lat_idx
-  ON public.edges_routing
-  USING btree
-  (target_lat);
-
--- Index: public.edges_routing_target_lon_idx
-
--- DROP INDEX public.edges_routing_target_lon_idx;
-
-CREATE INDEX edges_routing_target_lon_idx
-  ON public.edges_routing
-  USING btree
-  (target_lon);
 
 -- Index: public.fki_nodes_source_idx
 
