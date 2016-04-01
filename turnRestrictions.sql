@@ -190,7 +190,11 @@ FOR node IN (
 	END LOOP;
 	
 -- DEBUG PRINT
-		RAISE NOTICE 'neighbour_array print: %', neighbour_array;
+	RAISE NOTICE 'neighbour_array print: %', neighbour_array;
+	-- Create crossroad
+	-- - create new node for each outgoing edge
+	-- - for each neighbour node
+	-- - - clone edge to crossroad and connect it to new nodes according to the neighbour array
 END LOOP;
 
 END $$;
