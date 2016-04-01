@@ -81,12 +81,12 @@ FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrati
 	--				
 	--				ST_Contains(area, ST_StartPoint(edge.geom)) AND ST_Contains(area, ST_EndPoint(edge.geom))
 	--			) THEN
-					UPDATE edges_routing SET state = relation.tags->'ISO3166-1:alpha2' WHERE (
-			x_min <= edges_routing.source_lon AND edges_routing.source_lon <= x_max 
-			AND y_min <= edges_routing.source_lat AND edges_routing.source_lat <= y_max 
-			AND x_min <= edges_routing.target_lon AND edges_routing.target_lon <= x_max 
-			AND y_min <= edges_routing.target_lat AND edges_routing.target_lat <= y_max
-			AND ST_Within(edges_routing.geom, area)); 
+					UPDATE edges_data_routing SET state = relation.tags->'ISO3166-1:alpha2' WHERE (
+			x_min <= edges_data_routing.source_lon AND edges_data_routing.source_lon <= x_max 
+			AND y_min <= edges_data_routing.source_lat AND edges_data_routing.source_lat <= y_max 
+			AND x_min <= edges_data_routing.target_lon AND edges_data_routing.target_lon <= x_max 
+			AND y_min <= edges_data_routing.target_lat AND edges_data_routing.target_lat <= y_max
+			AND ST_Within(edges_data_routing.geom, area)); 
 	--			END IF;
 				
 			--END IF;
