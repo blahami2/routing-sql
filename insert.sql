@@ -122,8 +122,11 @@ VALUES
 -- INSERT NODES
 -- warning: valid_nodes view has to exist
 
-INSERT INTO nodes_routing (osm_id, is_inside, state, geom)
-SELECT id, FALSE, 'CZ', geom FROM valid_nodes   -- adjust state? based on political areas recalculate
+INSERT INTO nodes_data_routing (osm_id, state, geom)
+SELECT id, 'CZ', geom FROM valid_nodes;   -- adjust state? based on political areas recalculate
+
+INSERT INTO nodes_routing (data_id)
+SELECT id FROM nodes_data_routing;
 
 -- INSERT EDGES
 -- warning: valid_ways view has to exist

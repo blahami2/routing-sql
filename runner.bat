@@ -17,9 +17,8 @@ set dbuser=postgres
 set dbhost=localhost
 set dbpassword=password
 set inputpbf="C:\Routing\Data\prague.pbf"
-::WARNING!!! Do not forget to edit dbauth.txt as well!!!
 
-::goto index
+goto tables
 
 :createdb
 dropdb -U %dbuser% %database%
@@ -92,6 +91,11 @@ echo _setState.sql time: %time%
 psql -U %dbuser% -d %database% -a -f _setSpeed.sql > NUL     
 echo _setSpeed.sql time: %time% >> log.txt    
 echo _setSpeed.sql time: %time%
+
+:turn_rest                       
+psql -U %dbuser% -d %database% -a -f turnRestrictions.sql  
+echo turnRestrictions.sql time: %time% >> log.txt    
+echo turnRestrictions.sql time: %time%
                                                                     
 :end 
 echo End: %time%s >> log.txt

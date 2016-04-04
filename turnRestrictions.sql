@@ -1,7 +1,10 @@
-﻿DO $$
+DO $$
 DECLARE
 	relation relations%rowtype;
 	node nodes_routing%rowtype;
+	node_data nodes_data_routing%rowtype;
+	new_node nodes_routing%rowtype;
+	source_node nodes_routing%rowtype;
 	edge edges_routing%rowtype;
 	node_array bigint[];
 	tmp_array bigint[];
@@ -13,7 +16,10 @@ DECLARE
 	edge_to edges_routing%rowtype;
 	node_from_id bigint;
 	node_to_id bigint;
+	dist_data_id bigint;
+	new_node_id bigint;
 BEGIN
+ALTER TABLE nodes_routing ADD COLUMN target_data_id bigint;
 -- for all nodes that are in valid restrictions (where valid means it is not a restriction into an opposite oneway and it applies to cars)
 FOR node IN (
 	SELECT DISTINCT n.* FROM
@@ -21,15 +27,17 @@ FOR node IN (
 	(	SELECT DISTINCT r.* FROM
 		relations r
 		JOIN relation_members rm ON r.id = rm.relation_id
-		JOIN edges_routing e ON rm.member_id = e.osm_id
+		JOIN edges_data_routing d ON rm.member_id = d.osm_id
+		JOIN edges_routing e ON e.data_id = d.id
 		JOIN (SELECT n.* 
 			FROM relations r 
-			JOIN relation_members rm ON r.id = rm.relation_id 
-			JOIN nodes_routing n ON rm.member_id = n.osm_id
+			JOIN relation_members rm ON r.id = rm.relation_id
+			JOIN nodes_data_routing nd ON rm.member_id = nd.osm_id 
+			JOIN nodes_routing n ON n.data_id = nd.id
 			WHERE (
 				exist(r.tags,'restriction')
 			)
-		) AS nodes ON (e.target_id = nodes.id OR e.source_id = nodes.id)
+		) AS nodes ON (e.source_id = nodes.id)
 		WHERE (
 			exist(r.tags,'restriction')
 			AND (
@@ -37,10 +45,6 @@ FOR node IN (
 					rm.member_role = 'to'
 					AND (
 						nodes.id = e.source_id
-						OR (
-							nodes.id = e.target_id 
-							AND e.is_oneway IS FALSE
-						)
 					)
 				)	 
 			)
@@ -51,91 +55,53 @@ FOR node IN (
 		)
 	) AS rels
 	ON rm.relation_id = rels.id
-	JOIN nodes_routing n ON n.osm_id = rm.member_id
+	JOIN nodes_data_routing nd ON nd.osm_id = rm.member_id
+	JOIN nodes_routing n ON n.data_id = nd.id
 	ORDER BY n.id
 ) LOOP
-	-- Create nodes for outgoing edges
-	-- - get outgoing edges
-	-- - get neighbour nodes
-	-- - create new array (2D) and add these nodes to the array
-	node_array := NULL;
-	neighbour_array := NULL;
-	FOR edge IN (SELECT e.* FROM edges_routing e 
-		WHERE (
-			e.source_id = node.id
-			OR (
-				e.target_id = node.id
-	--			AND e.is_oneway IS FALSE
-			)
-		)
+	SELECT * INTO node_data FROM nodes_data_routing WHERE nodes_data_routing.id = node.data_id;
+	-- Foreach distinct data_id, edges join nodes where source = node
+	FOR dist_data_id IN (
+		SELECT DISTINCT n.data_id FROM edges_routing e JOIN nodes_routing n ON e.target_id = n.id WHERE e.source_id = node.id
 	) LOOP
-		IF edge.source_id = node.id THEN
-			node_array := array_append(node_array, edge.target_id);
-		ELSE
-			node_array := array_append(node_array, edge.source_id);
-		END IF;
+		-- clone node -> new_node
+		INSERT INTO nodes_routing (data_id, target_data_id) VALUES (node.data_id, dist_data_id) RETURNING id INTO new_node_id; 
+		-- connect node to target
+		-- - update edges set source = new_node where target = data_id
+		UPDATE edges_routing SET source_id = new_node_id WHERE id IN (SELECT e.id FROM edges_routing e JOIN nodes_routing n ON e.target_id = n.id WHERE (e.source_id = node.id AND n.data_id = dist_data_id));
 	END LOOP;
-	node_count := array_length(node_array, 1);
-	-- Connect all to all
-	-- - add all other nodes into the array for each neighbour node
-	FOR i IN 1..node_count LOOP
-		FOR j IN 1..node_count LOOP
-			IF i <> j THEN
---				neighbour_array[i][j] := node_array[i];
-				neighbour_array := array_append(neighbour_array, node_array[j]);
-			ELSE
-				neighbour_array := array_append(neighbour_array, -1::bigint);
---				neighbour_array[i][j] := -1::bigint;
-			END IF;
-		END LOOP;
-	END LOOP;
-
--- DEBUG PRINT
-	RAISE NOTICE 'node_array print: %', node_array;
-	RAISE NOTICE 'neighbour_array print: %', neighbour_array;
-	
-	-- - remove paths from nodes to opposite oneway neighbour
-	FOR edge IN (SELECT e.* FROM edges_routing e 
-		WHERE (
-			e.target_id = node.id
-			AND e.is_oneway IS TRUE
-		)
+	-- Foreach edge where target = crossroad
+	FOR edge IN (
+		SELECT * FROM edges_routing e WHERE e.target_id = node.id
 	) LOOP
-		FOR i IN 1..array_length(neighbour_array,1) LOOP
-			IF edge.source_id = neighbour_array[i] THEN
-				neighbour_array[i] := -1::bigint;
-			END IF;
+		SELECT * INTO source_node FROM nodes_routing n WHERE n.id = edge.source_id;
+		-- foreach new_node where data_id = crossroad.data_id and target_data_id <> edge.source.data_id
+		FOR new_node IN (
+			SELECT n.* FROM nodes_routing n JOIN nodes_data_routing nd ON n.data_id = nd.id WHERE (n.data_id = node.data_id AND n.id <> node.id AND n.target_data_id <> source_node.data_id ) 
+		) LOOP
+			-- clone edge -> new_edge
+			-- update new_edge set target = node
+			INSERT INTO edges_routing (data_id, speed, source_id, target_id) VALUES (edge.data_id, edge.speed, edge.source_id, new_node.id);
 		END LOOP;
+		-- delete old edge
+		DELETE FROM edges_routing e WHERE e.id = edge.id;
 	END LOOP;
-
--- DEBUG PRINT
---	FOR i IN 1..array_length(node_array,1) LOOP
---		RAISE NOTICE '[%]: %',i, node_array[i];
---	END LOOP;
-	RAISE NOTICE 'neighbour_array print: %', neighbour_array;
---	FOR i IN 1..node_count LOOP
---		FOR j IN 1..node_count LOOP
---			RAISE NOTICE '[%][%]: %', i,j, neighbour_array[(i-1)*node_count + j];
---		END LOOP;
---	END LOOP;
 	
 	-- Forall valid restrictions
 	FOR relation IN (
 		SELECT DISTINCT r.* FROM
 		relations r
 		JOIN relation_members rm ON r.id = rm.relation_id
-		JOIN edges_routing e ON rm.member_id = e.osm_id
+		JOIN edges_data_routing d ON rm.member_id = d.osm_id
+		JOIN edges_routing e ON e.data_id = d.id
+		JOIN nodes_routing n ON n.id = e.source_id
 		WHERE (
 			exist(r.tags,'restriction')
 			AND (
 				(
 					rm.member_role = 'to'
 					AND (
-						node.id = e.source_id
-						OR (
-							node.id = e.target_id 
-							AND e.is_oneway IS FALSE
-						)
+						node_data.id = n.data_id
 					)
 				)	 
 			)
@@ -145,57 +111,58 @@ FOR node IN (
 			)
 		)
 	) LOOP
-		RAISE NOTICE 'relation id = %', relation.id;
-		RAISE NOTICE 'node id = %', node.id;
-		-- get relation members (from, to)
-		SELECT e.* INTO edge_from FROM edges_routing e JOIN relation_members rm ON e.osm_id = rm.member_id WHERE (rm.relation_id = relation.id AND rm.member_role = 'from' AND (e.target_id = node.id OR e.source_id = node.id));
-		SELECT e.* INTO edge_to FROM edges_routing e JOIN relation_members rm ON e.osm_id = rm.member_id WHERE (rm.relation_id = relation.id AND rm.member_role = 'to' AND (e.target_id = node.id OR e.source_id = node.id));
-
-		IF edge_from.target_id = node.id THEN
-			node_from_id := edge_from.source_id;
-		ELSE
-			node_from_id := edge_from.target_id;
-		END IF;
-		IF edge_to.target_id = node.id THEN
-			node_to_id := edge_to.source_id;
-		ELSE
-			node_to_id := edge_to.target_id;
-		END IF;
-		
+--		RAISE NOTICE 'restrictions';
+		-- select edge_from from edges_routing where member_role = 'from' and target.data_id = node.data_id
+    SELECT e.* INTO edge_to
+      FROM edges_routing e
+      JOIN edges_data_routing d ON e.data_id = d.id 
+			JOIN nodes_routing source_n ON e.source_id = source_n.id 
+      JOIN relation_members rm ON d.osm_id = rm.member_id
+      WHERE (
+        rm.relation_id = relation.id
+        AND rm.member_role = 'from'
+        AND source_n.data_id = node.data_id
+    );
+		SELECT e.* INTO edge_from 
+			FROM edges_routing e 
+			JOIN edges_data_routing d ON e.data_id = d.id
+			JOIN nodes_routing target_n ON e.target_id = target_n.id 
+			JOIN relation_members rm ON d.osm_id = rm.member_id 
+			WHERE (
+				rm.relation_id = relation.id 
+				AND rm.member_role = 'from' 
+				AND target_n.data_id = node.data_id
+        AND target_n.target_data_id IN (
+          SELECT 
+          FROM 
+        )
+			);
 		-- no_* => remove connection
-		-- - remove 'to' edge/node from 'from' edge/node
 		IF relation.tags->'restriction' LIKE 'no_%' THEN
-			RAISE NOTICE 'removing % -> % from connections', edge_from.id, edge_to.id;
-			RAISE NOTICE 'nodes: % - > %', node_from_id, node_to_id;
-			idx := array_position(node_array,node_from_id);
-			FOR i IN ((idx-1)*node_count + 1)..((idx-1)*node_count + node_count) LOOP
-				IF neighbour_array[i] = node_to_id THEN
-					neighbour_array[i] = -1::bigint;
-				END IF;
-			END LOOP;
+		-- - remove 'from' edge
+      RAISE NOTICE 'no way from % to %', edge_from.source_id, edge_from.target_id;
+			DELETE FROM edges_routing e WHERE e.id = edge_from.id; 
 		END IF;
 		-- only_* => remove all other connections
-		-- - remove all but 'to' edge/node from 'from' edge/node
 		IF relation.tags->'restriction' LIKE 'only_%' THEN
-			RAISE NOTICE 'removing all but % -> % from connections', edge_from.id, edge_to.id;
-			RAISE NOTICE 'nodes: % - > %', node_from_id, node_to_id;
-			idx := array_position(node_array,node_from_id);
-			FOR i IN ((idx-1)*node_count + 1)..((idx-1)*node_count + node_count) LOOP
-				IF neighbour_array[i] <> node_to_id THEN
-					neighbour_array[i] = -1::bigint;
-				END IF;
-			END LOOP;
-		END IF;
-		
+		-- - remove all but 'from' edge                   
+      RAISE NOTICE 'only way from % to %', edge_from.source_id, edge_from.target_id;
+			DELETE FROM edges_routing WHERE edges_routing.id IN (
+				SELECT e.id
+				FROM edges_routing e
+				JOIN nodes_routing target_n ON e.target_id = target_n.id
+				WHERE (
+					e.source_id = edge_from.source_id
+					AND e.id <> edge_from.id
+					AND target_n.data_id = node.data_id
+				)
+			);
+		END IF;		
 	END LOOP;
-	
--- DEBUG PRINT
-	RAISE NOTICE 'neighbour_array print: %', neighbour_array;
-	-- Create crossroad
-	-- - create new node for each outgoing edge
-	-- - for each neighbour node
-	-- - - clone edge to crossroad and connect it to new nodes according to the neighbour array
+	-- Delete old node
+	DELETE FROM nodes_routing n WHERE n.id = node.id;
 END LOOP;
 
+ALTER TABLE nodes_routing DROP COLUMN target_data_id;
 END $$;
 

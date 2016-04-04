@@ -1,13 +1,15 @@
 DROP TABLE IF EXISTS public.edges_routing;
 DROP TABLE IF EXISTS public.edges_data_routing;
-DROP TABLE IF EXISTS public.nodes_routing;
+DROP TABLE IF EXISTS public.nodes_routing;    
+DROP TABLE IF EXISTS public.nodes_data_routing;
 DROP TABLE IF EXISTS public.traffic_speed_map;
 DROP TABLE IF EXISTS public.traffic_zones;
 DROP TABLE IF EXISTS public.speed_map;
 DROP TABLE IF EXISTS public.road_types;
 DROP SEQUENCE IF EXISTS public.edges_routing_inc; 
 DROP SEQUENCE IF EXISTS public.edges_data_routing_inc;
-DROP SEQUENCE IF EXISTS public.nodes_routing_inc;
+DROP SEQUENCE IF EXISTS public.nodes_routing_inc; 
+DROP SEQUENCE IF EXISTS public.nodes_data_routing_inc;
 
 -- ***************************** EDGE SEQUENCE *****************************
 -- Sequence: public.edges_routing_inc
@@ -48,7 +50,18 @@ CREATE SEQUENCE public.nodes_routing_inc
 ALTER TABLE public.nodes_routing_inc
   OWNER TO postgres;
 
+-- ***************************** NODE DATA SEQUENCE *****************************
+-- Sequence: public.edges_routing_inc
+-- DROP SEQUENCE public.edges_routing_inc;
 
+CREATE SEQUENCE public.nodes_data_routing_inc
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1
+  CACHE 1;
+ALTER TABLE public.nodes_data_routing_inc
+  OWNER TO postgres;
 
 -- ***************************** ROAD TYPES *****************************
 -- Table: public.road_types
@@ -152,6 +165,42 @@ CREATE INDEX traffic_speed_map_traffic_zone_state_idx
   (zone_id, state COLLATE pg_catalog."default");
 
 
+-- ***************************** NODES DATA *****************************
+-- Table: public.nodes_routing
+-- DROP TABLE public.nodes_routing;
+
+CREATE TABLE public.nodes_data_routing
+(
+  id bigint NOT NULL DEFAULT nextval('nodes_data_routing_inc'::regclass),
+  osm_id bigint,
+  state character(2),
+  geom geometry(Point,4326),
+  CONSTRAINT nodes_data_routing_pkey PRIMARY KEY (id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public.nodes_data_routing
+  OWNER TO postgres;
+
+-- Index: public.nodes_routing_id_idx
+
+-- DROP INDEX public.nodes_routing_id_idx;
+
+CREATE INDEX nodes_data_routing_id_idx
+  ON public.nodes_data_routing
+  USING btree
+  (id);
+
+-- Index: public.nodes_routing_osm_id_idx
+
+-- DROP INDEX public.nodes_routing_osm_id_idx;
+
+CREATE INDEX nodes_data_routing_osm_id_idx
+  ON public.nodes_data_routing
+  USING btree
+  (osm_id);
+
 -- ***************************** NODES *****************************
 -- Table: public.nodes_routing
 -- DROP TABLE public.nodes_routing;
@@ -159,11 +208,11 @@ CREATE INDEX traffic_speed_map_traffic_zone_state_idx
 CREATE TABLE public.nodes_routing
 (
   id bigint NOT NULL DEFAULT nextval('nodes_routing_inc'::regclass),
-  osm_id bigint,
-  is_inside boolean,
-  state character(2),
-  geom geometry(Point,4326),
-  CONSTRAINT nodes_routing_pkey PRIMARY KEY (id)
+  data_id bigint,
+  CONSTRAINT nodes_routing_pkey PRIMARY KEY (id),
+  CONSTRAINT nodes_data_idx FOREIGN KEY (data_id)
+      REFERENCES public.nodes_data_routing (id) MATCH SIMPLE
+      ON UPDATE NO ACTION ON DELETE NO ACTION
 )
 WITH (
   OIDS=FALSE
@@ -184,10 +233,12 @@ CREATE INDEX nodes_routing_id_idx
 
 -- DROP INDEX public.nodes_routing_osm_id_idx;
 
-CREATE INDEX nodes_routing_osm_id_idx
+CREATE INDEX nodes_routing_data_id_idx
   ON public.nodes_routing
   USING btree
-  (osm_id);
+  (data_id);
+  
+
 
   
 -- ***************************** EDGES DATA *****************************
@@ -203,18 +254,10 @@ CREATE TABLE public.edges_data_routing
   road_type integer,
   state character(2),
   geom geometry(Geometry,4326),
-  source_id bigint,
-  target_id bigint,
   source_lat integer,
   source_lon integer,
   target_lat integer,
   target_lon integer, 
-  CONSTRAINT nodes_source_idx FOREIGN KEY (source_id)
-      REFERENCES public.nodes_routing (id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT nodes_target_idx FOREIGN KEY (target_id)
-      REFERENCES public.nodes_routing (id) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT edges_data_routing_pkey PRIMARY KEY (id)
 )
 WITH (
@@ -268,25 +311,6 @@ CREATE INDEX edges_data_routing_target_lon_idx
   ON public.edges_data_routing
   USING btree
   (target_lon);
-  
-  
--- Index: public.fki_nodes_source_idx
-
--- DROP INDEX public.fki_nodes_source_idx;
-
-CREATE INDEX fki_data_nodes_source_idx
-  ON public.edges_data_routing
-  USING btree
-  (source_id);
-
--- Index: public.fki_nodes_target_idx
-
--- DROP INDEX public.fki_nodes_target_idx;
-
-CREATE INDEX fki_data_nodes_target_idx
-  ON public.edges_data_routing
-  USING btree
-  (target_id);
 
 
 -- ***************************** EDGES *****************************

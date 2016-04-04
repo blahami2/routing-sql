@@ -34,6 +34,8 @@ DECLARE
 	source_rec nodes_routing%rowtype;
 	target_rec nodes_routing%rowtype;
 	node_rec nodes_routing%rowtype;
+  source_data nodes_data_routing%rowtype;
+  target_data nodes_data_routing%rowtype;
 	speed_fw integer := -1;
 	speed_bw integer := -1;
 	paid boolean := false;
@@ -97,7 +99,7 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   	END LOOP;
   	counter := 0;
   	FOREACH node_id IN ARRAY way.nodes LOOP
-  		SELECT * INTO node_rec FROM nodes_routing WHERE nodes_routing.osm_id = node_id;
+  		SELECT * INTO node_rec FROM nodes_routing nr JOIN nodes_data_routing ndr ON nr.data_id = ndr.id WHERE ndr.osm_id = node_id;
   --		RAISE NOTICE 'noderec = %',node_rec;
   		counter := counter + 1;
   		IF edge_geom IS NULL THEN
@@ -110,11 +112,13 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   			target_rec := node_rec;
   			IF source_rec IS NULL THEN
   			ELSE
+          SELECT * INTO source_data FROM nodes_data_routing WHERE nodes_data_routing.id = source_rec.data_id;
+          SELECT * INTO target_data FROM nodes_data_routing WHERE nodes_data_routing.id = target_rec.data_id;
   				edge_geom = ST_SetSRID(edge_geom, 4326);          
  -- 				RAISE NOTICE 'inserting geom: %', ST_AsText(edge_geom); 
 --          RAISE NOTICE 'inserting data: wayid = %, paid = %, oneway = %, isinside = %, speedfw = %, speedbw = %, length = %, roadtype = %, state = %, sourceid = %, targetid = %, sourcelon = %, sourcelat = %, targetlon = %, targetlat = %, geom = %', way.id, paid, oneway, false, speed_fw, speed_bw,(ST_Length(edge_geom, true) / 1000), road_type, 'CZ'::character(2), source_rec.id, target_rec.id,ST_X(source_rec.geom) * 10000000,ST_Y(source_rec.geom) * 10000000, ST_X(target_rec.geom) * 10000000, ST_Y(target_rec.geom) * 10000000, ST_AsText(edge_geom) ;
   				INSERT INTO edges_data_routing 
-  					(osm_id, is_paid, is_inside, length, road_type, state, geom, source_id, target_id, source_lon, source_lat, target_lon, target_lat)
+  					(osm_id, is_paid, is_inside, length, road_type, state, geom, source_lon, source_lat, target_lon, target_lat)
   					VALUES
   					(way.id::bigint							-- osm_id
   					, paid									-- is_paid
@@ -123,12 +127,10 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   					, road_type							-- road_type
   					, 'CZ'::character(2)					-- state
   					, edge_geom								-- geom  
-  					, source_rec.id							-- source_id
-  					, target_rec.id							-- target_id
-  					, ST_X(source_rec.geom) * 10000000		-- source_longitude
-  					, ST_Y(source_rec.geom) * 10000000		-- source_latitude
-  					, ST_X(target_rec.geom) * 10000000		-- target_longitude
-  					, ST_Y(target_rec.geom) * 10000000		-- target_latitude
+  					, ST_X(source_data.geom) * 10000000		-- source_longitude
+  					, ST_Y(source_data.geom) * 10000000		-- source_latitude
+  					, ST_X(target_data.geom) * 10000000		-- target_longitude
+  					, ST_Y(target_data.geom) * 10000000		-- target_latitude
   					) RETURNING id INTO data_key;
           INSERT INTO edges_routing 
   					(data_id, speed, source_id, target_id)
