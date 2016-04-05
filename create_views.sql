@@ -21,3 +21,22 @@ FROM nodes JOIN
 	    ON (nodes.id = ways.nodes[array_lower(nodes,1)] OR nodes.id = ways.nodes[array_upper(nodes,1)])
         ) AS valid
 ON nodes.id = valid.node_id;
+
+CREATE OR REPLACE VIEW restrictions AS
+SELECT r.*, rm.*
+FROM relations r
+JOIN relation_members rm ON r.id = rm.relation_id
+WHERE exist(r.tags, 'restriction');
+
+CREATE OR REPLACE VIEW nodes_view AS
+SELECT n.*, d.osm_id, d.state, d.geom 
+FROM nodes_routing n
+JOIN nodes_data_routing d ON n.data_id = d.id;
+
+CREATE OR REPLACE VIEW edges_view AS
+SELECT e.*, d.osm_id, d.is_paid, d.is_inside, d.length, d.road_type, d.state, d.geom, d.source_lat, d.source_lon, d.target_lat, d.target_lon
+FROM edges_routing e
+JOIN edges_data_routing d ON e.data_id = d.id;
+
+
+
