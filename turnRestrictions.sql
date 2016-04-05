@@ -87,7 +87,8 @@ FOR node IN (
 		DELETE FROM edges_routing e WHERE e.id = edge.id;
 	END LOOP;
 	
-	-- Forall valid restrictions
+	-- Forall valid restrictions 
+--  RAISE NOTICE 'for node=%', node.id;
 	FOR relation IN (
 		SELECT DISTINCT r.* FROM
 		relations r
@@ -111,7 +112,7 @@ FOR node IN (
 			)
 		)
 	) LOOP
---		RAISE NOTICE 'restrictions';
+--		RAISE NOTICE 'restrictions: id=%', relation.id;
 		-- select edge_from from edges_routing where member_role = 'from' and target.data_id = node.data_id
     SELECT e.* INTO edge_to
       FROM edges_routing e
@@ -141,13 +142,13 @@ FOR node IN (
 		-- no_* => remove connection
 		IF relation.tags->'restriction' LIKE 'no_%' THEN
 		-- - remove 'from' edge
-      RAISE NOTICE 'no way from % to %', edge_from.source_id, edge_from.target_id;
+--      RAISE NOTICE 'no way from % to %', edge_from.source_id, edge_from.target_id;
 			DELETE FROM edges_routing e WHERE e.id = edge_from.id; 
 		END IF;
 		-- only_* => remove all other connections
 		IF relation.tags->'restriction' LIKE 'only_%' THEN
 		-- - remove all but 'from' edge                   
-      RAISE NOTICE 'only way from % to %', edge_from.source_id, edge_from.target_id;
+--      RAISE NOTICE 'only way from % to %', edge_from.source_id, edge_from.target_id;
 			DELETE FROM edges_routing WHERE edges_routing.id IN (
 				SELECT e.id
 				FROM edges_routing e
