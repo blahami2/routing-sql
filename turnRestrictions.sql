@@ -120,7 +120,7 @@ FOR node IN (
       JOIN relation_members rm ON d.osm_id = rm.member_id
       WHERE (
         rm.relation_id = relation.id
-        AND rm.member_role = 'from'
+        AND rm.member_role = 'to'
         AND source_n.data_id = node.data_id
     );
 		SELECT e.* INTO edge_from 
@@ -133,8 +133,9 @@ FOR node IN (
 				AND rm.member_role = 'from' 
 				AND target_n.data_id = node.data_id
         AND target_n.target_data_id IN (
-          SELECT 
-          FROM 
+          SELECT data_id
+          FROM nodes_routing
+          WHERE id = edge_to.target_id
         )
 			);
 		-- no_* => remove connection
