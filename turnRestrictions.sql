@@ -21,7 +21,9 @@ DECLARE
 BEGIN
 ALTER TABLE nodes_routing ADD COLUMN target_data_id bigint;
 -- for all nodes that are in valid restrictions (where valid means it is not a restriction into an opposite oneway and it applies to cars)
-FOR node IN (
+FOR node_data IN (  
+  SELECT * FROM nodes_data_routing
+/*
 	SELECT DISTINCT n.* FROM
 	relation_members rm JOIN
 	(	SELECT DISTINCT r.* FROM
@@ -57,9 +59,9 @@ FOR node IN (
 	ON rm.relation_id = rels.id
 	JOIN nodes_data_routing nd ON nd.osm_id = rm.member_id
 	JOIN nodes_routing n ON n.data_id = nd.id
-	ORDER BY n.id
+	ORDER BY n.id   */
 ) LOOP
-	SELECT * INTO node_data FROM nodes_data_routing WHERE nodes_data_routing.id = node.data_id;
+	SELECT * INTO node FROM nodes_routing WHERE nodes_routing.id = node_data.id;
 	-- Foreach distinct data_id, edges join nodes where source = node
 	FOR dist_data_id IN (
 		SELECT DISTINCT n.data_id FROM edges_routing e JOIN nodes_routing n ON e.target_id = n.id WHERE e.source_id = node.id

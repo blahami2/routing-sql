@@ -1,3 +1,6 @@
+DROP VIEW IF EXISTS public.edges_view;
+DROP VIEW IF EXISTS public.nodes_view;
+
 DROP TABLE IF EXISTS public.edges_routing;
 DROP TABLE IF EXISTS public.edges_data_routing;
 DROP TABLE IF EXISTS public.nodes_routing;    

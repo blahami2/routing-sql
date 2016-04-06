@@ -17,6 +17,8 @@ set dbuser=postgres
 set dbhost=localhost
 set dbpassword=password
 set inputpbf="C:\Routing\Data\prague.pbf"
+set postgispath="C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2"
+set osmosispath="C:\Program Files (x86)\osmosis"
 
 goto tables
 
@@ -27,12 +29,12 @@ createdb -U %dbuser% -O %dbuser% -E utf8 -D %tablespace% --lc-collate="Czech_Cze
 :tmp
 psql -U %dbuser% -d %database% -c "ALTER DATABASE %database% SET temp_tablespaces = '%temp_tablespace%';" > NUL  
 :create
-psql -U %dbuser% -d %database% -f "C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2\postgis.sql" > NUL
-psql -U %dbuser% -d %database% -f "C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2\spatial_ref_sys.sql" > NUL  
+psql -U %dbuser% -d %database% -f "%postgispath%\postgis.sql" > NUL
+psql -U %dbuser% -d %database% -f "%postgispath%\spatial_ref_sys.sql" > NUL  
 psql -U %dbuser% -d %database% -c "CREATE EXTENSION hstore;" > NUL
-::psql -U %dbuser% -d %database% -f "C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2\hstore-new.sql"
-psql -U %dbuser% -d %database% -f "C:\Program Files (x86)\osmosis\script\pgsnapshot_schema_0.6.sql" > NUL
-psql -U %dbuser% -d %database% -f "C:\Program Files (x86)\osmosis\script\pgsnapshot_schema_0.6_linestring.sql" > NUL  
+::psql -U %dbuser% -d %database% -f "%postgispath%\hstore-new.sql"
+psql -U %dbuser% -d %database% -f "%osmosispath%\script\pgsnapshot_schema_0.6.sql" > NUL
+psql -U %dbuser% -d %database% -f "%osmosispath%\script\pgsnapshot_schema_0.6_linestring.sql" > NUL  
 
   
 echo database creation time: %time% >> log.txt  
@@ -92,8 +94,9 @@ psql -U %dbuser% -d %database% -a -f _setSpeed.sql > NUL
 echo _setSpeed.sql time: %time% >> log.txt    
 echo _setSpeed.sql time: %time%
 
+
 :turn_rest                       
-psql -U %dbuser% -d %database% -a -f turnRestrictions.sql  
+psql -U %dbuser% -d %database% -a -f turnRestrictions.sql > NUL 
 echo turnRestrictions.sql time: %time% >> log.txt    
 echo turnRestrictions.sql time: %time%
                                                                     
