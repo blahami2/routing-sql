@@ -83,7 +83,7 @@ FOR node_data IN (
 		) LOOP
 			-- clone edge -> new_edge
 			-- update new_edge set target = node
-			INSERT INTO edges_routing (data_id, speed, source_id, target_id) VALUES (edge.data_id, edge.speed, edge.source_id, new_node.id);
+			INSERT INTO edges_routing (data_id, speed, is_forward, source_id, target_id) VALUES (edge.data_id, edge.speed, edge.is_forward, edge.source_id, new_node.id);
 		END LOOP;
 		-- delete old edge
 		DELETE FROM edges_routing e WHERE e.id = edge.id;

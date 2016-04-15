@@ -1,4 +1,4 @@
-﻿DROP FUNCTION IF EXISTS public."find_node"(longitude double precision, latitude double precision);
+DROP FUNCTION IF EXISTS public."find_node"(longitude double precision, latitude double precision);
 
 CREATE OR REPLACE FUNCTION find_node(longitude double precision, latitude double precision) 
 RETURNS TABLE (data_id bigint, osm_id bigint, speed integer, is_paid boolean, length double precision, road_type integer, geom geometry, out_point geometry, out_distance double precision)
