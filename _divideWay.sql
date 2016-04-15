@@ -133,19 +133,21 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   					, ST_Y(target_data.geom) * 10000000		-- target_latitude
   					) RETURNING id INTO data_key;
           INSERT INTO edges_routing 
-  					(data_id, speed, source_id, target_id)
+  					(data_id, speed, is_forward, source_id, target_id)
   					VALUES
   					(data_key							-- osm_id
   					, speed_fw								-- speed_forward
+            , true
   					, source_rec.id							-- source_id
   					, target_rec.id							-- target_id
   					);
           IF oneway IS FALSE THEN
             INSERT INTO edges_routing 
-    					(data_id, speed, source_id, target_id)
+    					(data_id, speed, is_forward, source_id, target_id)
     					VALUES
     					(data_key							-- osm_id
     					, speed_bw								-- speed_forward
+              , false
     					, target_rec.id							-- source_id
     					, source_rec.id							-- target_id
     					);

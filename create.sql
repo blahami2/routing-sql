@@ -325,6 +325,7 @@ CREATE TABLE public.edges_routing
   id bigint NOT NULL DEFAULT nextval('edges_routing_inc'::regclass),
   data_id bigint,
   speed integer,
+  is_forward boolean,
   source_id bigint,
   target_id bigint,
   CONSTRAINT edges_routing_pkey PRIMARY KEY (id),

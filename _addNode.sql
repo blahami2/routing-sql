@@ -61,20 +61,19 @@ ELSE
 		-- INSERT INTO nodes_routing (data_id) VALUES (data_key) RETURNING id INTO mid;
 		RAISE NOTICE 'INSERT INTO nodes_routing (data_id) VALUES (%) RETURNING id INTO mid;', data_key;
 		-- INSERT edges
-		IF single_edge.forward IS TRUE THEN
+		IF single_edge.is_forward IS TRUE THEN
 			-- source is source, target is target mid
 			-- source is mid, target is target
-			-- INSERT INTO edges_routing (data_id, speed, source_id, target_id) VALUES (data1_key, single_edge.speed, single_edge.source_id, mid);
-			RAISE NOTICE 'INSERT INTO edges_routing (data_id, speed, source_id, target_id) VALUES (%, %, %, %);', data1_key, single_edge.speed, single_edge.source_id, mid;
-			-- INSERT INTO edges_routing (data_id, speed, source_id, target_id) VALUES (data2_key, single_edge.speed, mid, single_edge.target_id);
-			RAISE NOTICE 'INSERT INTO edges_routing (data_id, speed, source_id, target_id) VALUES (%, %, %, %);', data2_key, single_edge.speed, mid, single_edge.target_id;
+			-- INSERT INTO edges_routing (data_id, speed, is_forward, source_id, target_id) VALUES (data1_key, single_edge.speed, single_edge.is_forward, single_edge.source_id, mid);
+			RAISE NOTICE 'INSERT INTO edges_routing (data_id, speed, is_forward, source_id, target_id) VALUES (%, %, %, %, %);', data1_key, single_edge.speed, single_edge.is_forward, single_edge.source_id, mid;
+			-- INSERT INTO edges_routing (data_id, speed, is_forward, source_id, target_id) VALUES (data2_key, single_edge.speed, single_edge.is_forward, mid, single_edge.target_id);
+			RAISE NOTICE 'INSERT INTO edges_routing (data_id, speed, is_forward, source_id, target_id) VALUES (%, %, %, %, %);', data2_key, single_edge.speed, single_edge.is_forward, mid, single_edge.target_id;
 		ELSE
-			-- INSERT INTO edges_routing (data_id, speed, source_id, target_id) VALUES (data2_key, single_edge.speed, single_edge.source_id, mid);
-			RAISE NOTICE 'INSERT INTO edges_routing (data_id, speed, source_id, target_id) VALUES (%, %, %, %);', data2_key, single_edge.speed, single_edge.source_id, mid;
-			-- INSERT INTO edges_routing (data_id, speed, source_id, target_id) VALUES (data1_key, single_edge.speed, mid, single_edge.target_id);
-			RAISE NOTICE 'INSERT INTO edges_routing (data_id, speed, source_id, target_id) VALUES (%, %, %, %);', data1_key, single_edge.speed, mid, single_edge.target_id;
+			-- INSERT INTO edges_routing (data_id, speed, is_forward, source_id, target_id) VALUES (data2_key, single_edge.speed, single_edge.is_forward, single_edge.source_id, mid);
+			RAISE NOTICE 'INSERT INTO edges_routing (data_id, speed, is_forward, source_id, target_id) VALUES (%, %, %, %, %);', data2_key, single_edge.speed, single_edge.is_forward, single_edge.source_id, mid;
+			-- INSERT INTO edges_routing (data_id, speed, is_forward, source_id, target_id) VALUES (data1_key, single_edge.speed, single_edge.is_forward, mid, single_edge.target_id);
+			RAISE NOTICE 'INSERT INTO edges_routing (data_id, speed, is_forward, source_id, target_id) VALUES (%, %, %, %, %);', data1_key, single_edge.speed, single_edge.is_forward, mid, single_edge.target_id;
 		END IF;
-		-- INSERT INTO edges_routing (data_id, speed, source_id, target_id) VALUES (data1_key, single_edge.speed, );
 	END LOOP;
 	-- remove old edge
 	-- DELETE FROM edges_routing e WHERE e.data_id = edge.data_id;
