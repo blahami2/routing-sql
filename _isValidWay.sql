@@ -17,7 +17,7 @@ ways.tags->'highway' = 'secondary' OR
 ways.tags->'highway' = 'tertiary' OR
 ways.tags->'highway' = 'unclassified' OR
 ways.tags->'highway' = 'residential' OR
---ways.tags->'highway' = 'service' OR
+ways.tags->'highway' = 'service' OR
 ways.tags->'highway' = 'living_street' OR
 (ways.tags->'highway' = 'pedestrian' AND (ways.tags->'motor_vehicle'='yes' OR ways.tags->'motor_vehicle'='designated' OR ways.tags->'motorcar'='yes')) OR
 ways.tags->'highway' = 'motorway_link' OR

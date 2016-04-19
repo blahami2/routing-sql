@@ -3,13 +3,13 @@
 REM -- will contain all the scripts
 :start
 set ENDTIME=%time%
-set database=osm_prague
+set database=osm_cz
 set tablespace=osm
 set temp_tablespace=temporary_hdd
 set dbuser=postgres
 set dbhost=localhost
 set dbpassword=password
-set inputpbf=C:\Routing\Data\prague.pbf
+set inputpbf=C:\Routing\Data\CZ.pbf
 set postgispath=C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2
 set osmosispath=C:\Program Files (x86)\osmosis
 echo ---------------------------------------------------------------------------------------- >> log.txt
@@ -22,6 +22,7 @@ echo Start: %time%
 
 
 ::goto tables
+goto set_inside
 
 :createdb
 dropdb -U %dbuser% %database%
@@ -101,6 +102,8 @@ psql -U %dbuser% -d %database% -a -f _divideWay.sql > NUL
 ::echo _divideWay.sql time: %time% 
 call:set_duration
 call:print_all "_divideWay.sql time: " %time%
+
+::goto end
 
 :set_inside
 psql -U %dbuser% -d %database% -a -f _setInside.sql > NUL  
