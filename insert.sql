@@ -2,34 +2,46 @@
 INSERT INTO road_types (type_id, name)
 VALUES 
   (1, 'motorway'), 
-  (2, 'trunk'),
-  (3, 'primary'),
-  (4, 'secondary'),
-  (5, 'tertiary'),
-  (6, 'unclassified'),
-  (7, 'residential'),
-  (8, 'living_street');
+  (2, 'motorway_link'), 
+  (3, 'trunk'),   
+  (4, 'trunk_link'),
+  (5, 'primary'),   
+  (6, 'primary_link'),
+  (7, 'secondary'),   
+  (8, 'secondary_link'),
+  (9, 'tertiary'),      
+  (10, 'tertiary_link'),
+  (11, 'unclassified'),
+  (12, 'residential'),
+  (13, 'living_street'),  
+  (14, 'service'),
+  (15, 'ferry'),
+  (16, 'movable'),
+  (17, 'shuttle_train'),
+  (18, 'default');
 
 -- INSERT VALUES INTO SPEED MAP
 DELETE FROM speed_map;
 INSERT INTO speed_map (type_id, state, speed_inside, speed_outside)
 VALUES 
-  (1, 'CZ', 80, 130),
-  (2,'CZ',50,90),
-  (3,'CZ',50,90),
-  (4,'CZ',50,90),
-  (5,'CZ',50,90),
-  (6,'CZ',50,90),
-  (7,'CZ',50,90),
-  (8,'CZ',20,20),
-  (1,'DE',80,150),
-  (2,'DE',50,130),
-  (3,'DE',50,100),
-  (4,'DE',50,100),
-  (5,'DE',50,100),
-  (6,'DE',50,100),
-  (7,'DE',50,100),
-  (8,'DE',7,7);
+  (1,'CZ',90,90),
+  (2,'CZ',45,45),
+  (3,'CZ',85,85),
+  (4,'CZ',40,40),
+  (5,'CZ',65,65),
+  (6,'CZ',30,30),
+  (7,'CZ',55,55),
+  (8,'CZ',25,25),
+  (9,'CZ',40,40),
+  (10,'CZ',20,20),
+  (11,'CZ',25,25),
+  (12,'CZ',25,25),
+  (13,'CZ',10,10),
+  (14,'CZ',15,15),
+  (15,'CZ',5,5),
+  (16,'CZ',5,5),
+  (17,'CZ',10,10),
+  (18,'CZ',10,10);
   
 -- INSERT TRAFFIC ZONES
 INSERT INTO traffic_zones (zone_id, name)
@@ -132,6 +144,8 @@ SELECT id FROM nodes_data_routing;
 -- warning: valid_ways view has to exist
 
 -- call _divideWay.sql
+
+
 
 
 
