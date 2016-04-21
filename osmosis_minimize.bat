@@ -12,4 +12,4 @@ set JAVACMD_OPTIONS=-server -Xmx4g
 
 
 
-call osmosis --read-pbf %inputpbf% --tf accept-relations type=boundary,restriction --tf accept-ways highway=* access=* --tf reject-ways highway=motorway,motorway_link access=no,private,agricultural,forestry,emergency,psv,delivery --tf reject-relations --used-node idTrackerType=BitSet --write-pbf %outputpbf%
+call osmosis --read-pbf %inputpbf% --buffer --log-progress --tf accept-relations type=boundary,restriction --tf accept-ways highway=* access=* --tf reject-ways highway=motorway,motorway_link access=no,private,agricultural,forestry,emergency,psv,delivery --tf reject-relations --used-node --write-pbf %outputpbf%
