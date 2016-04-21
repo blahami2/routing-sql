@@ -82,14 +82,7 @@ WITH (
 ALTER TABLE public.road_types
   OWNER TO postgres;
 
--- Index: public.road_types_type_id_idx
 
--- DROP INDEX public.road_types_type_id_idx;
-
-CREATE INDEX road_types_type_id_idx
-  ON public.road_types
-  USING btree
-  (type_id);
 
 -- ***************************** SPEED MAP *****************************
 -- Table: public.speed_map
@@ -109,12 +102,6 @@ WITH (
 ALTER TABLE public.speed_map
   OWNER TO postgres;
 
--- Index: public.speed_map_road_type_state_idx
--- DROP INDEX public.speed_map_road_type_state_idx;
-CREATE INDEX speed_map_road_type_state_idx
-  ON public.speed_map
-  USING btree
-  (type_id, state COLLATE pg_catalog."default");
   
   
 -- ***************************** TRAFFIC ZONES *****************************
@@ -133,13 +120,7 @@ WITH (
 ALTER TABLE public.traffic_zones
   OWNER TO postgres;
 
--- Index: public.traffic_zones_zone_id_idx
--- DROP INDEX public.traffic_zones_zone_id_idx;
 
-CREATE INDEX traffic_zones_zone_id_idx
-  ON public.traffic_zones
-  USING btree
-  (zone_id);
   
 -- ***************************** TRAFFIC SPEED MAP *****************************
 -- Table: public.traffic_speed_map
@@ -186,23 +167,7 @@ WITH (
 ALTER TABLE public.nodes_data_routing
   OWNER TO postgres;
 
--- Index: public.nodes_routing_id_idx
 
--- DROP INDEX public.nodes_routing_id_idx;
-
-CREATE INDEX nodes_data_routing_id_idx
-  ON public.nodes_data_routing
-  USING btree
-  (id);
-
--- Index: public.nodes_routing_osm_id_idx
-
--- DROP INDEX public.nodes_routing_osm_id_idx;
-
-CREATE INDEX nodes_data_routing_osm_id_idx
-  ON public.nodes_data_routing
-  USING btree
-  (osm_id);
 
 -- ***************************** NODES *****************************
 -- Table: public.nodes_routing
@@ -223,24 +188,7 @@ WITH (
 ALTER TABLE public.nodes_routing
   OWNER TO postgres;
 
--- Index: public.nodes_routing_id_idx
 
--- DROP INDEX public.nodes_routing_id_idx;
-
-CREATE INDEX nodes_routing_id_idx
-  ON public.nodes_routing
-  USING btree
-  (id);
-
--- Index: public.nodes_routing_osm_id_idx
-
--- DROP INDEX public.nodes_routing_osm_id_idx;
-
-CREATE INDEX nodes_routing_data_id_idx
-  ON public.nodes_routing
-  USING btree
-  (data_id);
-  
 
 
   
@@ -270,50 +218,7 @@ ALTER TABLE public.edges_data_routing
   OWNER TO postgres;
 
 
--- Index: public.edges_routing_osm_id_idx
 
--- DROP INDEX public.edges_routing_osm_id_idx;
-
-CREATE INDEX edges_data_routing_osm_id_idx
-  ON public.edges_data_routing
-  USING btree
-  (osm_id);    
-
--- Index: public.edges_routing_source_lat_idx
-
--- DROP INDEX public.edges_routing_source_lat_idx;
-
-CREATE INDEX edges_data_routing_source_lat_idx
-  ON public.edges_data_routing
-  USING btree
-  (source_lat);
-
--- Index: public.edges_routing_source_lon_idx
-
--- DROP INDEX public.edges_routing_source_lon_idx;
-
-CREATE INDEX edges_data_routing_source_lon_idx
-  ON public.edges_data_routing
-  USING btree
-  (source_lon);
-
--- Index: public.edges_routing_target_lat_idx
-
--- DROP INDEX public.edges_routing_target_lat_idx;
-
-CREATE INDEX edges_data_routing_target_lat_idx
-  ON public.edges_data_routing
-  USING btree
-  (target_lat);
-
--- Index: public.edges_routing_target_lon_idx
-
--- DROP INDEX public.edges_data_routing_target_lon_idx;
-
-CREATE INDEX edges_data_routing_target_lon_idx
-  ON public.edges_data_routing
-  USING btree
-  (target_lon);
 
 
 -- ***************************** EDGES *****************************
@@ -345,38 +250,4 @@ WITH (
 ALTER TABLE public.edges_routing
   OWNER TO postgres;
 
--- Index: public.edges_routing_id_idx
 
--- DROP INDEX public.edges_routing_id_idx;
-
-CREATE INDEX edges_routing_id_idx
-  ON public.edges_routing
-  USING btree
-  (id);
-
-  
--- Index: public.edges_routing_osm_id_idx
--- DROP INDEX public.edges_routing_osm_id_idx;
-
-CREATE INDEX edges_data_routing_id_idx
-  ON public.edges_routing
-  USING btree
-  (data_id);
-
--- Index: public.fki_nodes_source_idx
-
--- DROP INDEX public.fki_nodes_source_idx;
-
-CREATE INDEX fki_nodes_source_idx
-  ON public.edges_routing
-  USING btree
-  (source_id);
-
--- Index: public.fki_nodes_target_idx
-
--- DROP INDEX public.fki_nodes_target_idx;
-
-CREATE INDEX fki_nodes_target_idx
-  ON public.edges_routing
-  USING btree
-  (target_id);

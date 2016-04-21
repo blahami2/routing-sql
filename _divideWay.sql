@@ -87,7 +87,7 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   -- **************************************************************************************** EXTRACT ONEWAY ****************************************************************************************	
   	oneway := (exist(way.tags, 'oneway') AND (way.tags->'oneway' = 'yes')) OR (way.tags->'highway' = 'motorway');
   -- **************************************************************************************** EXTRACT ROAD TYPE ****************************************************************************************
-    SELECT type_id INTO road_type FROM road_types WHERE way.tags->'highway' LIKE (CONCAT(road_types.name,'%'));
+    SELECT type_id INTO road_type FROM road_types WHERE way.tags->'highway' LIKE (CONCAT(road_types.name));
     IF road_type IS NULL THEN
   	SELECT type_id INTO road_type FROM road_types WHERE road_types.name = 'living_street';
     END IF;
@@ -163,3 +163,90 @@ END LOOP;
 END $$;
 
 DROP FUNCTION IF EXISTS public."_parseSpeedFromMaxspeed"(hstore, text);
+
+-- Index: public.edges_routing_osm_id_idx
+
+-- DROP INDEX public.edges_routing_osm_id_idx;
+
+CREATE INDEX edges_data_routing_osm_id_idx
+  ON public.edges_data_routing
+  USING btree
+  (osm_id);    
+
+-- Index: public.edges_routing_source_lat_idx
+
+-- DROP INDEX public.edges_routing_source_lat_idx;
+
+CREATE INDEX edges_data_routing_source_lat_idx
+  ON public.edges_data_routing
+  USING btree
+  (source_lat);
+
+-- Index: public.edges_routing_source_lon_idx
+
+-- DROP INDEX public.edges_routing_source_lon_idx;
+
+CREATE INDEX edges_data_routing_source_lon_idx
+  ON public.edges_data_routing
+  USING btree
+  (source_lon);
+
+-- Index: public.edges_routing_target_lat_idx
+
+-- DROP INDEX public.edges_routing_target_lat_idx;
+
+CREATE INDEX edges_data_routing_target_lat_idx
+  ON public.edges_data_routing
+  USING btree
+  (target_lat);
+
+-- Index: public.edges_routing_target_lon_idx
+
+-- DROP INDEX public.edges_data_routing_target_lon_idx;
+
+CREATE INDEX edges_data_routing_target_lon_idx
+  ON public.edges_data_routing
+  USING btree
+  (target_lon);
+  
+CREATE INDEX edges_data_routing_geom_idx
+  ON public.edges_data_routing
+  USING gist
+  (geom);
+
+
+-- Index: public.edges_routing_id_idx
+
+-- DROP INDEX public.edges_routing_id_idx;
+
+CREATE INDEX edges_routing_id_idx
+  ON public.edges_routing
+  USING btree
+  (id);
+
+  
+-- Index: public.edges_routing_osm_id_idx
+-- DROP INDEX public.edges_routing_osm_id_idx;
+
+CREATE INDEX edges_data_routing_id_idx
+  ON public.edges_routing
+  USING btree
+  (data_id);
+
+-- Index: public.fki_nodes_source_idx
+
+-- DROP INDEX public.fki_nodes_source_idx;
+
+CREATE INDEX fki_nodes_source_idx
+  ON public.edges_routing
+  USING btree
+  (source_id);
+
+-- Index: public.fki_nodes_target_idx
+
+-- DROP INDEX public.fki_nodes_target_idx;
+
+CREATE INDEX fki_nodes_target_idx
+  ON public.edges_routing
+  USING btree
+  (target_id);

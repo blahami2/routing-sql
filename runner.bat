@@ -21,8 +21,7 @@ echo Start: %time%
 
 
 
-::goto tables
-goto set_inside
+goto tables
 
 :createdb
 dropdb -U %dbuser% %database%
@@ -59,28 +58,24 @@ call:print_all "osmosis time: " %time%
 
 ::goto end
 
-:index
+:index_osm
 psql -U %dbuser% -d %database% -a -f index_osm.sql > NUL 
+call:set_duration
+call:print_all "index_osm.sql time: " %time%
 
 :tables
 psql -U %dbuser% -d %database% -a -f create.sql > NUL   
-::echo create.sql time: %time% >> log.txt      
-::echo create.sql time: %time%
 call:set_duration
 call:print_all "create.sql time: " %time%
 
 
 :functions
-psql -U %dbuser% -d %database% -a -f _isValidWay.sql > NUL 
-::echo _isValidWay.sql time: %time% >> log.txt 
-::echo _isValidWay.sql time: %time%   
+psql -U %dbuser% -d %database% -a -f _isValidWay.sql > NUL  
 call:set_duration
 call:print_all "_isValidWay.sql time: " %time%
 
 :views
 psql -U %dbuser% -d %database% -a -f create_views.sql > NUL   
-::echo create_views.sql time: %time% >> log.txt 
-::echo create_views.sql time: %time% 
 call:set_duration
 call:print_all "create_views.sql time: " %time%
 
@@ -91,38 +86,33 @@ call:print_all "_findNode.sql time: " %time%
 
 :insert
 psql -U %dbuser% -d %database% -a -f insert.sql > NUL   
-::echo insert.sql time: %time% >> log.txt      
-::echo insert.sql time: %time%  
 call:set_duration
 call:print_all "insert.sql time: " %time%
 
+:index_routing
+psql -U %dbuser% -d %database% -a -f index_routing.sql > NUL    
+call:set_duration
+call:print_all "index_routing.sql time: " %time%
+
 :divide_ways   
 psql -U %dbuser% -d %database% -a -f _divideWay.sql > NUL
-::echo _divideWay.sql time: %time% >> log.txt  
-::echo _divideWay.sql time: %time% 
 call:set_duration
 call:print_all "_divideWay.sql time: " %time%
 
 ::goto end
 
 :set_inside
-psql -U %dbuser% -d %database% -a -f _setInside.sql > NUL  
-::echo _setInside.sql time: %time% >> log.txt    
-::echo _setInside.sql time: %time%  
+psql -U %dbuser% -d %database% -a -f _setInside.sql > NUL   
 call:set_duration
 call:print_all "_setInside.sql time: " %time%
 
 :set_state
 psql -U %dbuser% -d %database% -a -f _setState.sql > NUL 
-::echo _setState.sql time: %time% >> log.txt      
-::echo _setState.sql time: %time%  
 call:set_duration
 call:print_all "_setState.sql time: " %time%
 
 :set_speed                        
 psql -U %dbuser% -d %database% -a -f _setSpeed.sql > NUL     
-::echo _setSpeed.sql time: %time% >> log.txt    
-::echo _setSpeed.sql time: %time%   
 call:set_duration
 call:print_all "_setSpeed.sql time: " %time%
 
@@ -130,8 +120,6 @@ call:print_all "_setSpeed.sql time: " %time%
 
 :turn_rest                       
 psql -U %dbuser% -d %database% -a -f turnRestrictions.sql > NUL 
-::echo turnRestrictions.sql time: %time% >> log.txt    
-::echo turnRestrictions.sql time: %time% 
 call:set_duration
 call:print_all "turnRestrictions.sql time: " %time%
                                                                     
