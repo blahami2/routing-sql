@@ -85,7 +85,7 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   -- **************************************************************************************** EXTRACT PAID ****************************************************************************************
   	paid := exist(way.tags, 'toll') AND (way.tags->'toll' = 'yes');
   -- **************************************************************************************** EXTRACT ONEWAY ****************************************************************************************	
-  	oneway := (exist(way.tags, 'oneway') AND (way.tags->'oneway' = 'yes')) OR (way.tags->'highway' = 'motorway');
+  	oneway := (exist(way.tags, 'oneway') AND (way.tags->'oneway' = 'yes')) OR (way.tags->'highway' = 'motorway') OR (exist(way.tags, 'junction') AND (way.tags->'junction' = 'roundabout'));
   -- **************************************************************************************** EXTRACT ROAD TYPE ****************************************************************************************
     SELECT type_id INTO road_type FROM road_types WHERE way.tags->'highway' LIKE (CONCAT(road_types.name));
     IF road_type IS NULL THEN
