@@ -1,4 +1,4 @@
--- Add indexes to tables.
+-- Add indexes to osm tables.
 CREATE INDEX idx_nodes_geom ON nodes USING gist (geom);
 
 CREATE INDEX idx_way_nodes_node_id ON way_nodes USING btree (node_id);
@@ -24,8 +24,6 @@ CREATE INDEX relation_members_relation_id_idx
   ON public.relation_members
   USING btree
   (relation_id);
-  
-
   
 CREATE INDEX relations_id_idx
   ON public.relations

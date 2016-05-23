@@ -1,6 +1,8 @@
-﻿DROP FUNCTION IF EXISTS public."_addNode"(node_osm_id bigint, way_osm_id bigint);
+-- Splits an edge in two and inserts a new node (based on the given osm node id)
 
-CREATE OR REPLACE FUNCTION _addNode(node_osm_id bigint, way_osm_id bigint) 
+DROP FUNCTION IF EXISTS public."_split_edge"(node_osm_id bigint, way_osm_id bigint);
+
+CREATE OR REPLACE FUNCTION _split_edge(node_osm_id bigint, way_osm_id bigint) 
 RETURNS void
 AS 
 $$
@@ -84,5 +86,5 @@ END IF;
 END;
 $$ LANGUAGE plpgsql;
 
-SELECT _addNode(74227063::bigint, 167236796::bigint);
+--SELECT _split_edge(74227063::bigint, 167236796::bigint);
 

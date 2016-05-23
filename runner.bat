@@ -3,13 +3,13 @@
 REM -- will contain all the scripts
 :start
 set ENDTIME=%time%
-set database=osm_cz
+set database=osm_kladno
 set tablespace=osm
 set temp_tablespace=temporary_hdd
 set dbuser=postgres
 set dbhost=localhost
 set dbpassword=password
-set inputpbf=C:\Routing\Data\CZ.pbf
+set inputpbf=C:\Routing\Data\kladno.pbf
 set postgispath=C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2
 set osmosispath=C:\Program Files (x86)\osmosis
 echo ---------------------------------------------------------------------------------------- >> log.txt
@@ -21,7 +21,8 @@ echo Start: %time%
 
 
 
-goto tables
+::goto tables
+::goto turn_rest
 
 :createdb
 dropdb -U %dbuser% %database%
@@ -55,6 +56,7 @@ call osmosis --read-pbf %1 --log-progress --write-pgsql-change host=%dbhost% dat
 ::echo osmosis time: %time%     
 call:set_duration
 call:print_all "osmosis time: " %time%
+echo %date% %time% >> log.txt
 
 ::goto end
 
@@ -64,9 +66,9 @@ call:set_duration
 call:print_all "index_osm.sql time: " %time%
 
 :tables
-psql -U %dbuser% -d %database% -a -f create.sql > NUL   
+psql -U %dbuser% -d %database% -a -f create_tables.sql > NUL   
 call:set_duration
-call:print_all "create.sql time: " %time%
+call:print_all "create_tables.sql time: " %time%
 
 
 :functions
@@ -80,14 +82,14 @@ call:set_duration
 call:print_all "create_views.sql time: " %time%
 
 :functions                  
-psql -U %dbuser% -d %database% -a -f _findNode.sql > NUL 
+psql -U %dbuser% -d %database% -a -f find_node.sql > NUL 
 call:set_duration
-call:print_all "_findNode.sql time: " %time% 
+call:print_all "find_node.sql time: " %time% 
 
 :insert
-psql -U %dbuser% -d %database% -a -f insert.sql > NUL   
+psql -U %dbuser% -d %database% -a -f insert_all.sql > NUL   
 call:set_duration
-call:print_all "insert.sql time: " %time%
+call:print_all "insert_all.sql time: " %time%
 
 :index_routing
 psql -U %dbuser% -d %database% -a -f index_routing.sql > NUL    
@@ -95,38 +97,41 @@ call:set_duration
 call:print_all "index_routing.sql time: " %time%
 
 :divide_ways   
-psql -U %dbuser% -d %database% -a -f _divideWay.sql > NUL
+psql -U %dbuser% -d %database% -a -f insert_edges.sql > NUL
 call:set_duration
-call:print_all "_divideWay.sql time: " %time%
+call:print_all "insert_edges.sql time: " %time%
 
 ::goto end
 
 :set_inside
-psql -U %dbuser% -d %database% -a -f _setInside.sql > NUL   
+psql -U %dbuser% -d %database% -a -f determine_city.sql > NUL   
 call:set_duration
-call:print_all "_setInside.sql time: " %time%
+call:print_all "determine_city time: " %time%
 
 :set_state
-psql -U %dbuser% -d %database% -a -f _setState.sql > NUL 
+psql -U %dbuser% -d %database% -a -f determine_state.sql > NUL 
 call:set_duration
-call:print_all "_setState.sql time: " %time%
+call:print_all "determine_state.sql time: " %time%
 
 :set_speed                        
-psql -U %dbuser% -d %database% -a -f _setSpeed.sql > NUL     
+psql -U %dbuser% -d %database% -a -f set_speed.sql > NUL     
 call:set_duration
-call:print_all "_setSpeed.sql time: " %time%
+call:print_all "set_speed.sql time: " %time%
 
 ::goto end
 
+::remove indexes
 :turn_rest                       
-psql -U %dbuser% -d %database% -a -f turnRestrictions.sql > NUL 
+psql -U %dbuser% -d %database% -a -f tr_expand_graph.sql > NUL 
 call:set_duration
-call:print_all "turnRestrictions.sql time: " %time%
+call:print_all "tr_expand_graph.sql time: " %time%
+::add indexes                
                                                                     
 :end 
 ::echo End: %time%s >> log.txt  
 call:set_duration
 call:print_all "End: %time%"
+echo %date% %time% >> log.txt
 
 :set_duration
 set STARTTIME=%ENDTIME%

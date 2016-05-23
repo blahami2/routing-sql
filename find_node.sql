@@ -1,24 +1,25 @@
 DROP FUNCTION IF EXISTS public."find_node"(longitude double precision, latitude double precision);
 
 CREATE OR REPLACE FUNCTION find_node(longitude double precision, latitude double precision) 
-RETURNS TABLE (data_id bigint, osm_id bigint, speed integer, is_paid boolean, length double precision, road_type integer, geom geometry, out_point geometry, out_distance double precision)
+RETURNS TABLE (data_id bigint, osm_id bigint, speed integer, is_paid boolean, length double precision, road_type integer, geom geometry, out_point bigint, out_distance double precision)
 AS 
 $$
 DECLARE
     point geometry;
+    closest_node nodes_view%rowtype; 
     closest_point geometry;
     edge edges_view%rowtype;
 BEGIN
 
 point := ST_GeomFromText(concat('POINT(',longitude, ' ', latitude, ')'),4326);
 -- check if it is not a valid node, return this if so
-SELECT n.geom INTO closest_point FROM nodes_view n WHERE ST_Equals(
+SELECT n INTO closest_node FROM nodes_view n WHERE ST_Equals(
       ST_SnapToGrid(point, 0.000001),
       ST_SnapToGrid(n.geom, 0.000001)
    );
-IF closest_point IS NOT NULL THEN
+IF closest_node IS NOT NULL THEN
 --	RAISE NOTICE '%', ST_AsText(closest_point);
-	out_point := point;
+	out_point := closest_node.id;
 	out_distance := 0;
 	RETURN NEXT;
 ELSE
@@ -39,7 +40,8 @@ ELSE
 		geom := edge.geom;
 
 		closest_point := ST_ClosestPoint(edge.geom, point);
-		SELECT n.geom INTO out_point FROM nodes_view n WHERE n.id = edge.target_id;
+		SELECT n INTO closest_node FROM nodes_view n WHERE n.id = edge.target_id;
+    out_point := closest_node.id;
 		IF ST_Equals(
 			ST_SnapToGrid(out_point, 0.000001),
 			ST_SnapToGrid(ST_StartPoint(edge.geom), 0.000001)

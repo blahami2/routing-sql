@@ -1,3 +1,5 @@
+-- Extracts edges out of ways, 
+
 CREATE OR REPLACE FUNCTION public."_parseSpeedFromMaxspeed"(tags hstore, tag text) RETURNS integer AS $$
 BEGIN
   IF exist(tags, tag) THEN -- maxspeed tag
@@ -123,7 +125,7 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
   					(way.id::bigint							-- osm_id
   					, paid									-- is_paid
   					, false									-- is_inside
-  					, (ST_Length(edge_geom, true) / 1000)	-- length
+  					, (ST_Length(edge_geom, true))	-- length
   					, road_type							-- road_type
   					, 'CZ'::character(2)					-- state
   					, edge_geom								-- geom  
