@@ -40,7 +40,8 @@ ALTER TABLE public.turn_restrictions_array
 
 DO $$
 DECLARE         
-	relation relations%rowtype;
+	relation relations%rowtype;   
+  edge edges_view%rowtype;  
   edge_from edges_view%rowtype;  
   edge_to edges_view%rowtype;
   node nodes_view%rowtype;
@@ -84,24 +85,26 @@ FOR relation IN (
       AND source_n.data_id = node.data_id
   );           
   RAISE NOTICE 'edge_to = %', edge_to;
-  IF relation.tags->'restriction' LIKE 'no_%' THEN
-    INSERT INTO turn_restrictions (via_id, to_id) VALUES (node.data_id, edge_to.data_id) RETURNING from_id INTO array_id_inserted;
-    INSERT INTO turn_restrictions_array (array_id, position, edge_id) VALUES (array_id_inserted, 0, edge_from.data_id);
-  END IF;
-	IF relation.tags->'restriction' LIKE 'only_%' THEN
-  -- INSERT ALL OTHER
-  /*
-  	DELETE FROM edges_routing WHERE edges_routing.id IN (
-				SELECT e.id
-				FROM edges_routing e
-				JOIN nodes_routing target_n ON e.target_id = target_n.id
-				WHERE (
-					e.source_id = edge_from.source_id
-					AND e.id <> edge_from.id
-					AND target_n.data_id = node.data_id
-				)
-			);
-  */
+  IF edge_from IS NOT NULL AND node IS NOT NULL AND edge_to IS NOT NULL THEN
+    IF relation.tags->'restriction' LIKE 'no_%' THEN
+      INSERT INTO turn_restrictions (via_id, to_id) VALUES (node.data_id, edge_to.data_id) RETURNING from_id INTO array_id_inserted;
+      INSERT INTO turn_restrictions_array (array_id, position, edge_id) VALUES (array_id_inserted, 0, edge_from.data_id);
+    END IF;
+  	IF relation.tags->'restriction' LIKE 'only_%' THEN
+    -- INSERT ALL OTHER
+      FOR edge IN (
+        SELECT e.* FROM edges_view e
+        JOIN nodes_view n ON n.id = e.source_id
+        WHERE (
+          e.source_id = edge_to.source_id
+          AND e.id <> edge_to.id
+          AND n.data_id = node.data_id
+        )
+      ) LOOP
+        INSERT INTO turn_restrictions (via_id, to_id) VALUES (node.data_id, edge.data_id) RETURNING from_id INTO array_id_inserted;
+        INSERT INTO turn_restrictions_array (array_id, position, edge_id) VALUES (array_id_inserted, 0, edge_from.data_id);
+      END LOOP;
+    END IF;
   END IF;
 END LOOP;
 END $$;
