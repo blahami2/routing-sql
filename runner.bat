@@ -3,13 +3,13 @@
 REM -- will contain all the scripts
 :start
 set ENDTIME=%time%
-set database=osm_cz_tt
+set database=osm_europe
 set tablespace=osm
 set temp_tablespace=temporary_hdd
 set dbuser=postgres
 set dbhost=localhost
 set dbpassword=password
-set inputpbf=C:\Routing\Data\CZ.pbf
+set inputpbf=C:\Routing\Data\europe_parsed.pbf
 set postgispath=C:\Program Files\PostgreSQL\9.5\share\contrib\postgis-2.2
 set osmosispath=C:\Program Files (x86)\osmosis
 echo ---------------------------------------------------------------------------------------- >> log.txt
@@ -48,6 +48,7 @@ REM osmosis peformance tunning
 set JAVACMD_OPTIONS=-server -Xmx4g
 :import
 call osmosis --read-pbf %inputpbf% --buffer --log-progress --write-pgsql host=%dbhost% database=%database% user=%dbuser% password=%dbpassword% dbType=postgresql
+goto:eof
 goto osmtime 
 :update
 call osmosis --read-pbf %1 --log-progress --write-pgsql-change host=%dbhost% database=%database% user=%dbuser% password=%dbpassword% dbType=postgresql
