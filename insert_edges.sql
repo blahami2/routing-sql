@@ -76,14 +76,23 @@ FOR way IN (SELECT * FROM ways WHERE public."_isValidWay"(ways)) LOOP
 	edge_geom := NULL;
 	node_array := NULL;
 	road_type := 1;
-  speed_fw := 0.8 * public."_parseSpeedFromMaxspeed"(way.tags, 'maxspeed:forward');  
-  speed_bw := 0.8 * public."_parseSpeedFromMaxspeed"(way.tags, 'maxspeed:backward');
+
+  speed_fw := public."_parseSpeedFromMaxspeed"(way.tags, 'maxspeed:forward');
+  speed_bw := public."_parseSpeedFromMaxspeed"(way.tags, 'maxspeed:backward');
   IF speed_fw = -1 THEN
-    speed_fw := 0.8 * public."_parseSpeedFromMaxspeed"(way.tags, 'maxspeed'); 
+    speed_fw := public."_parseSpeedFromMaxspeed"(way.tags, 'maxspeed');
   END IF;
-  IF speed_bw = -1 THEN  
+  IF speed_bw = -1 THEN
     speed_bw := speed_fw;
   END IF;
+
+  -- Upraveno puvodni pronasobeni
+  -- BUG-FIX: do speed_XY neslo priradit float
+  -- BUG-FIX: kontrola [IF speed_XY = -1 THEN] se v minule verzi neuplatnila, protoze vysledek byl po pronasobeni [-0.8]
+  -- BUG: Ztrata presnosti
+  speed_fw := ((0.8*speed_fw)::int);
+  speed_bw := ((0.8*speed_bw)::int);
+
   -- **************************************************************************************** EXTRACT PAID ****************************************************************************************
   	paid := exist(way.tags, 'toll') AND (way.tags->'toll' = 'yes');
   -- **************************************************************************************** EXTRACT ONEWAY ****************************************************************************************	
