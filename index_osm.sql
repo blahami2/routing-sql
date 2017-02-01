@@ -1,9 +1,9 @@
 -- Add indexes to osm tables.
-CREATE INDEX idx_nodes_geom ON nodes USING gist (geom);
+CREATE INDEX idx_gist_nodes_geom ON nodes USING gist (geom);
 
-CREATE INDEX idx_way_nodes_node_id ON way_nodes USING btree (node_id);
+CREATE INDEX idx_btree_way_nodes_node_id ON way_nodes USING btree (node_id);
 
-CREATE INDEX idx_relation_members_member_id_and_type ON relation_members USING btree (member_id, member_type);
+CREATE INDEX idx_btree_relation_members_member_id_and_type ON relation_members USING btree (member_id, member_type);
 
 
 CREATE INDEX nodes_id_idx
@@ -35,7 +35,7 @@ CREATE INDEX ways_id_idx
   USING btree
   (id);
 
-CREATE INDEX idx_ways_linestring
+CREATE INDEX idx_gist_ways_linestring
   ON public.ways
   USING gist
   (linestring);
