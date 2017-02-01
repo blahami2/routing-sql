@@ -23,7 +23,8 @@ DECLARE
 	relation_way a5293eb9d34b3de48539ef881b7d2e174;
 BEGIN
 
-FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrative' AND to_number(tags->'admin_level','99') = 2 AND tags->'ISO3166-1:alpha2' IS NOT NULL)) LOOP
+-- BUG-FIX: operator [tags->'ISO3166-1:alpha2' IS NOT NULL] operator [->] has very low priority, added brackets to explicitly define priority
+FOR relation IN (SELECT * FROM relations WHERE (tags->'boundary' = 'administrative' AND to_number(tags->'admin_level','99') = 2 AND (tags->'ISO3166-1:alpha2') IS NOT NULL)) LOOP
 	area := null;
 	used_members := null;
 	FOR member_id IN (SELECT rm.relation_id FROM relation_members AS rm JOIN ways AS w ON rm.member_id = w.id WHERE rm.relation_id = relation.id) LOOP
