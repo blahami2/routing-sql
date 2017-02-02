@@ -181,3 +181,29 @@ echo "- SQL: tr_turn_tables.sql"
 psql -d $database -f "tr_turn_tables.sql" > /dev/null
 
 echo "[OK]"
+
+# --------------------------------------------------------------------------------------------------------------------
+echo "\n+++ Altering DATABASE and TABLE owner to user ["$dbuser"] (phase 2) +++"
+
+psql -d $database -c "ALTER TABLE edges_data_routing owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE edges_data_routing_inc owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE edges_routing owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE edges_routing_inc owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE edges_view owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE nodes_data_routing owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE nodes_data_routing_inc owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE nodes_routing owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE nodes_routing_inc owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE nodes_view owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE restrictions owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE road_types owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE speed_map owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE traffic_speed_map owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE traffic_zones owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE turn_restrictions owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE turn_restrictions_array owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE turn_restrictions_inc owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE valid_nodes owner to $dbuser;" > /dev/null
+psql -d $database -c "ALTER TABLE valid_ways owner to $dbuser;" > /dev/null
+
+echo "[OK]"
