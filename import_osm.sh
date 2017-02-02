@@ -71,15 +71,15 @@ echo "[OK]"
 
 # --------------------------------------------------------------------------------------------------------------------
 echo "\n+++ Checking, that (postgreSQL client, postgis, osmosis) is present +++"
-if ! (dpkg -l | grep -q "postgresql-client-common"); then
+if ! (dpkg -l | grep "ii"  | grep -q "postgresql-client-common"); then
     echo "FAILED - postgreSQL client is not present"
     exit
 fi
-if ! (dpkg -l | grep -q "postgis"); then
+if ! (dpkg -l | grep "ii"  | grep -q "postgis"); then
     echo "FAILED - postgis is not present"
     exit
 fi
-if ! (dpkg -l | grep -q "osmosis"); then
+if ! (dpkg -l | grep "ii"  | grep -q "osmosis"); then
     echo "FAILED - osmosis is not present"
     exit
 fi
